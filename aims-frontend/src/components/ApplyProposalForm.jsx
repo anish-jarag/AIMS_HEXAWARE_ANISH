@@ -1,4 +1,3 @@
-// components/ApplyProposalForm.jsx
 import React, { useState, useEffect } from "react";
 import Step1Vehicle from "./steps/Step1Vehicle";
 import Step2Policy from "./steps/Step2Policy";
@@ -8,73 +7,98 @@ import Step5ReviewSubmit from "./steps/Step5ReviewSubmit";
 
 const ApplyProposalForm = () => {
   const [step, setStep] = useState(1);
-
   const [formData, setFormData] = useState({
-    vehicle: {
-      registrationNumber: "",
-      vehicleType: "",
-      make: "",
-      model: "",
-      yearOfManufacture: "",
-    },
+    vehicleId: null,
+    vehicleType: "",
     policyId: null,
     addonIds: [],
-    documents: [], // Array of { file, documentType }
+    documents: {},
   });
+  const [userId, setUserId] = useState(null);
+  const token = localStorage.getItem("jwtToken");
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/user/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) =>
+        res.ok ? res.json() : Promise.reject("Failed to fetch user")
+      )
+      .then((data) => setUserId(data.userId))
+      .catch((err) => {
+        console.error("Failed to fetch user ID:", err);
+        alert("Authentication failed. Please login again.");
+        window.location.href = "/login";
+      });
+  }, [token]);
 
   const nextStep = () => setStep((prev) => prev + 1);
   const prevStep = () => setStep((prev) => prev - 1);
 
-  const updateFormData = (key, value) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-  };
-
-  return (
-    <div className="container my-5">
-      <h3 className="mb-4">Apply for Vehicle Insurance</h3>
-
-      <div className="card shadow-sm p-4">
-        {step === 1 && (
+  const renderStep = () => {
+    switch (step) {
+      case 1:
+        return (
           <Step1Vehicle
-            data={formData.vehicle}
-            setData={(data) => updateFormData("vehicle", data)}
+            formData={formData}
+            setFormData={setFormData}
             nextStep={nextStep}
           />
-        )}
-
-        {step === 2 && (
+        );
+      case 2:
+        return (
           <Step2Policy
-            vehicleType={formData.vehicle.vehicleType}
+            vehicleType={formData.vehicleType}
             policyId={formData.policyId}
-            setPolicyId={(id) => updateFormData("policyId", id)}
+            setPolicyId={(id) =>
+              setFormData((prev) => ({ ...prev, policyId: id }))
+            }
             nextStep={nextStep}
             prevStep={prevStep}
           />
-        )}
-
-        {step === 3 && (
+        );
+      case 3:
+        return (
           <Step3Addons
             policyId={formData.policyId}
             addonIds={formData.addonIds}
-            setAddonIds={(ids) => updateFormData("addonIds", ids)}
+            setAddonIds={(ids) =>
+              setFormData((prev) => ({ ...prev, addonIds: ids }))
+            }
             nextStep={nextStep}
             prevStep={prevStep}
           />
-        )}
-
-        {step === 4 && (
+        );
+      case 4:
+        return (
           <Step4UploadDocuments
-            documents={formData.documents}
-            setDocuments={(docs) => updateFormData("documents", docs)}
+            formData={formData}
+            setFormData={setFormData}
             nextStep={nextStep}
             prevStep={prevStep}
           />
-        )}
+        );
+      case 5:
+        return (
+          <Step5ReviewSubmit
+            formData={formData}
+            userId={userId}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      default:
+        return <p>Invalid step</p>;
+    }
+  };
 
-        {step === 5 && (
-          <Step5ReviewSubmit formData={formData} prevStep={prevStep} />
-        )}
-      </div>
+  return (
+    <div className="container py-5">
+      <h4 className="mb-4">Submit New Insurance Proposal</h4>
+      <div className="card p-4 shadow-sm">{renderStep()}</div>
+      <div className="text-muted mt-3 text-end">Step {step} of 5</div>
     </div>
   );
 };

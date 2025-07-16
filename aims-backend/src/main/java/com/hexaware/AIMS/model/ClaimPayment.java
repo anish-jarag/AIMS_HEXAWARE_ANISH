@@ -4,10 +4,12 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.hexaware.AIMS.model.enums.ClaimPaymentStatus;
 
 @Entity
 @Table(name = "claim_payments")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ClaimPayment {
 
     @Id

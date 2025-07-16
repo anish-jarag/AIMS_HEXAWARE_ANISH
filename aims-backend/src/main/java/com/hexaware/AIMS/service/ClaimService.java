@@ -7,7 +7,6 @@ import com.hexaware.AIMS.model.enums.ClaimStatus;
 import com.hexaware.AIMS.repository.ClaimRepository;
 import com.hexaware.AIMS.repository.IssuedPolicyRepository;
 import com.hexaware.AIMS.repository.UserRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,17 +26,23 @@ public class ClaimService {
     private UserRepository userRepo;
 
     // File a new claim
-    public String submitClaim(int issuedPolicyId, int userId, String reason) {
+    public String submitClaim(int issuedPolicyId, int userId, String reason, double amountRequested) {
         Optional<IssuedPolicy> policyOpt = issuedPolicyRepo.findById(issuedPolicyId);
         Optional<User> userOpt = userRepo.findById(userId);
 
-        if (!policyOpt.isPresent()) return "Issued Policy not found";
-        if (!userOpt.isPresent()) return "User not found";
+        if (policyOpt.isEmpty()) return "Issued Policy not found";
+        if (userOpt.isEmpty()) return "User not found";
+
+        IssuedPolicy policy = policyOpt.get();
+        if (amountRequested > policy.getCoverageAmount()) {
+            return "Requested amount ₹" + amountRequested + " exceeds coverage limit ₹" + policy.getCoverageAmount();
+        }
 
         Claim claim = new Claim();
-        claim.setIssuedPolicy(policyOpt.get());
+        claim.setIssuedPolicy(policy);
         claim.setSubmittedBy(userOpt.get());
         claim.setClaimReason(reason);
+        claim.setClaimAmountRequested(amountRequested);
         claim.setStatus(ClaimStatus.PENDING);
         claim.setSubmittedDate(LocalDate.now());
 
@@ -50,8 +55,8 @@ public class ClaimService {
         Optional<Claim> claimOpt = claimRepo.findById(claimId);
         Optional<User> officerOpt = userRepo.findById(officerId);
 
-        if (!claimOpt.isPresent()) return "Claim not found";
-        if (!officerOpt.isPresent()) return "Officer not found";
+        if (claimOpt.isEmpty()) return "Claim not found";
+        if (officerOpt.isEmpty()) return "Officer not found";
 
         Claim claim = claimOpt.get();
         claim.setStatus(decision);

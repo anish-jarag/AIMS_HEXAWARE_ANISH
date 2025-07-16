@@ -85,7 +85,7 @@ const ManageAddons = () => {
       description: addon.description,
       extraCost: addon.additionalCost,
       addonType: addon.addonType,
-      policyId: addon.policy.policyId,
+      policyId: addon.policy ? addon.policy.policyId : "",
     });
     setEditId(addon.addonId);
     setIsEditing(true);
@@ -212,7 +212,10 @@ const ManageAddons = () => {
                     <strong>Type:</strong> {a.addonType}
                   </p>
                   <p>
-                    <strong>Policy:</strong> {a.policy.policyName}
+                    <strong>Policy:</strong>{" "}
+                    {a.policy && a.policy.policyName
+                      ? a.policy.policyName
+                      : "N/A"}
                   </p>
                 </div>
                 <div className="card-footer d-flex justify-content-between">

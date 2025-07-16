@@ -3,8 +3,11 @@ package com.hexaware.AIMS.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "quotes")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Quote {
 
     @Id

@@ -1,8 +1,12 @@
 package com.hexaware.AIMS.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class PolicyAddon {
 
     @Id
@@ -19,6 +23,7 @@ public class PolicyAddon {
 
     @ManyToOne
     @JoinColumn(name = "policy_id", nullable = false)
+    @JsonIgnore
     private Policy policy;
 
     // Constructors

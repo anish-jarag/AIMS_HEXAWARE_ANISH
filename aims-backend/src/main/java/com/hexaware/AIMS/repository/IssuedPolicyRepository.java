@@ -12,4 +12,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface IssuedPolicyRepository extends JpaRepository<IssuedPolicy, Integer> {
     List<IssuedPolicy> findByUser(User user);
     Optional<IssuedPolicy> findByProposal(Proposal proposal);
+    Optional<IssuedPolicy> findById(int issuedPolicyId);
+
 }

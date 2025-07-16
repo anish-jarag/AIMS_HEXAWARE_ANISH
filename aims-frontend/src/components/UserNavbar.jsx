@@ -11,8 +11,9 @@ const UserNavbar = () => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary px-3">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-primary px-4 py-3 shadow-sm">
       <Link className="navbar-brand fw-bold" to="/user/dashboard">
+        <i className="bi bi-shield-lock me-2" />
         HexaShield
       </Link>
 
@@ -26,9 +27,14 @@ const UserNavbar = () => {
       </button>
 
       <div className="collapse navbar-collapse" id="userNavbar">
-        <ul className="navbar-nav me-auto">
+        <ul className="navbar-nav me-auto mt-2 mt-lg-0 ms-4 gap-4">
           <li className="nav-item">
-            <Link to="/user/vehicles" className="nav-link">
+            <Link to="/user/dashboard" className="nav-link">
+              Home
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/user/my-vehicles" className="nav-link">
               My Vehicles
             </Link>
           </li>
@@ -43,8 +49,13 @@ const UserNavbar = () => {
             </Link>
           </li>
           <li className="nav-item">
-            <Link to="/user/documents" className="nav-link">
-              Uploaded Documents
+            <Link to="/user/my-policies" className="nav-link">
+              My Policies
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/user/my-payments" className="nav-link">
+              Payments
             </Link>
           </li>
           <li className="nav-item">
@@ -52,10 +63,15 @@ const UserNavbar = () => {
               My Claims
             </Link>
           </li>
+          <li className="nav-item">
+            <Link to="/user/profile" className="nav-link">
+              Profile
+            </Link>
+          </li>
         </ul>
 
         <div className="d-flex align-items-center gap-3">
-          <span className="text-white">Hi, {userName}</span>
+          <span className="text-white fw-semibold">Hi, {userName}</span>
           <button
             className="btn btn-outline-light btn-sm"
             onClick={handleLogout}

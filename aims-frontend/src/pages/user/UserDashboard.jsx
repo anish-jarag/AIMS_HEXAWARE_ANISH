@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import UserNavbar from "../../components/UserNavbar";
 
 const UserDashboard = () => {
@@ -7,27 +8,23 @@ const UserDashboard = () => {
   const [vehicles, setVehicles] = useState([]);
   const [proposals, setProposals] = useState([]);
 
-  // Fetch user's vehicles
+  const token = localStorage.getItem("jwtToken");
+
   useEffect(() => {
-    fetch("http://localhost:8080/api/vehicle/my", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-      },
-    })
-      .then((res) => res.json())
-      .then(setVehicles)
+    axios
+      .get("http://localhost:8080/api/vehicle/my", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setVehicles(res.data))
       .catch((err) => console.error("Vehicle fetch failed", err));
   }, []);
 
-  // Fetch user's proposals
   useEffect(() => {
-    fetch("http://localhost:8080/api/proposal/my", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-      },
-    })
-      .then((res) => res.json())
-      .then(setProposals)
+    axios
+      .get("http://localhost:8080/api/proposal/my", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setProposals(res.data))
       .catch((err) => console.error("Proposal fetch failed", err));
   }, []);
 
@@ -35,23 +32,26 @@ const UserDashboard = () => {
     <>
       <UserNavbar />
 
-      <div className="container py-4">
-        {/* Welcome */}
-        <h2 className="fw-bold">Welcome back, {userName}</h2>
-        <p className="text-muted mb-4">Your insurance activity at a glance</p>
+      <div className="container py-5">
+        {/* Welcome Message */}
+        <div className="mb-4">
+          <h2 className="fw-bold">Welcome back, {userName} 👋</h2>
+          <p className="text-muted">
+            Here's a quick overview of your insurance activity.
+          </p>
+        </div>
 
         {/* Summary Cards */}
         <div className="row g-4 mb-5">
           <div className="col-md-4">
-            <div className="card shadow-sm border-0 h-100">
-              <div className="card-body d-flex align-items-center">
-                <i className="bi bi-car-front fs-2 text-primary me-3" />
+            <div className="card shadow-sm h-100 border-0">
+              <div className="card-body d-flex align-items-center gap-3">
                 <div>
-                  <h6 className="mb-1 text-muted">My Vehicles</h6>
-                  <h4 className="fw-bold mb-1">{vehicles.length}</h4>
+                  <h6 className="text-muted mb-1">My Vehicles</h6>
+                  <h4 className="fw-bold">{vehicles.length}</h4>
                   <Link
-                    to="/user/vehicles"
-                    className="btn btn-sm btn-outline-primary"
+                    to="/user/my-vehicles"
+                    className="btn btn-sm btn-outline-primary mt-2"
                   >
                     Manage Vehicles
                   </Link>
@@ -61,15 +61,14 @@ const UserDashboard = () => {
           </div>
 
           <div className="col-md-4">
-            <div className="card shadow-sm border-0 h-100">
-              <div className="card-body d-flex align-items-center">
-                <i className="bi bi-file-text fs-2 text-success me-3" />
+            <div className="card shadow-sm h-100 border-0">
+              <div className="card-body d-flex align-items-center gap-3">
                 <div>
-                  <h6 className="mb-1 text-muted">Applications Submitted</h6>
-                  <h4 className="fw-bold mb-1">{proposals.length}</h4>
+                  <h6 className="text-muted mb-1">Applications Submitted</h6>
+                  <h4 className="fw-bold">{proposals.length}</h4>
                   <Link
                     to="/user/proposals"
-                    className="btn btn-sm btn-outline-success"
+                    className="btn btn-sm btn-outline-success mt-2"
                   >
                     View Applications
                   </Link>
@@ -79,15 +78,14 @@ const UserDashboard = () => {
           </div>
 
           <div className="col-md-4">
-            <div className="card shadow-sm border-0 h-100">
-              <div className="card-body d-flex align-items-center">
-                <i className="bi bi-file-plus fs-2 text-info me-3" />
+            <div className="card shadow-sm h-100 border-0">
+              <div className="card-body d-flex align-items-center gap-3">
                 <div>
-                  <h6 className="mb-1 text-muted">Need Coverage?</h6>
-                  <h4 className="fw-bold mb-1">Apply Now</h4>
+                  <h6 className="text-muted mb-1">Need Coverage?</h6>
+                  <h4 className="fw-bold">Apply Now</h4>
                   <Link
                     to="/user/proposal/new"
-                    className="btn btn-sm btn-primary"
+                    className="btn btn-sm btn-primary mt-2"
                   >
                     Apply for Insurance
                   </Link>
@@ -103,7 +101,7 @@ const UserDashboard = () => {
           <p className="text-muted">You haven’t applied for insurance yet.</p>
         ) : (
           <div className="table-responsive">
-            <table className="table table-hover">
+            <table className="table table-hover align-middle">
               <thead className="table-light">
                 <tr>
                   <th>ID</th>

@@ -1,8 +1,11 @@
 package com.hexaware.AIMS.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ProposalAddon {
 
     @Id

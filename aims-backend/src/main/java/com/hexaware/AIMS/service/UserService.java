@@ -22,8 +22,8 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
     
-    public User getUserById(int userId) {
-        return userRepository.findById(userId).orElse(null);
+    public Optional<User> getUserById(int userId) {
+        return userRepository.findById(userId);
     }
 
     public String updateUserDetails(User existingUser, User updated) {

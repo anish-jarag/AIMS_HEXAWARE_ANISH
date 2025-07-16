@@ -1,13 +1,14 @@
 package com.hexaware.AIMS.model;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.hexaware.AIMS.model.enums.PaymentMode;
 import com.hexaware.AIMS.model.enums.PaymentStatus;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Payment {
 
     @Id
@@ -30,15 +31,19 @@ public class Payment {
     @Column(nullable = false)
     private LocalDateTime paymentDate = LocalDateTime.now();
 
+    @Column(nullable = false, unique = true)
+    private String transactionReference;
+
     // Constructors
     public Payment() {}
 
-    public Payment(Proposal proposal, double amountPaid, PaymentMode mode, PaymentStatus status, LocalDateTime paymentDate) {
+    public Payment(Proposal proposal, double amountPaid, PaymentMode mode, PaymentStatus status, LocalDateTime paymentDate, String transactionReference) {
         this.proposal = proposal;
         this.amountPaid = amountPaid;
         this.mode = mode;
         this.status = status;
         this.paymentDate = paymentDate;
+        this.transactionReference = transactionReference;
     }
 
     // Getters and Setters
@@ -59,4 +64,7 @@ public class Payment {
 
     public LocalDateTime getPaymentDate() { return paymentDate; }
     public void setPaymentDate(LocalDateTime paymentDate) { this.paymentDate = paymentDate; }
+
+    public String getTransactionReference() { return transactionReference; }
+    public void setTransactionReference(String transactionReference) { this.transactionReference = transactionReference; }
 }

@@ -1,5 +1,6 @@
 package com.hexaware.AIMS.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.hexaware.AIMS.model.enums.VehicleType;
 import jakarta.persistence.*;
 
@@ -7,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Policy {
 
     @Id

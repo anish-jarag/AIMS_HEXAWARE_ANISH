@@ -1,86 +1,119 @@
-// components/steps/Step5ReviewSubmit.jsx
 import React from "react";
+import axios from "axios";
 
-const Step5ReviewSubmit = ({ formData, prevStep }) => {
-  const handleSubmit = () => {
-    const form = new FormData();
-    const userId = localStorage.getItem("userId");
+const Step5ReviewSubmit = ({ formData, userId, prevStep }) => {
+  const token = localStorage.getItem("jwtToken");
 
-    // Vehicle
-    form.append("registrationNumber", formData.vehicle.registrationNumber);
-    form.append("vehicleType", formData.vehicle.vehicleType);
-    form.append("make", formData.vehicle.make);
-    form.append("model", formData.vehicle.model);
-    form.append("yearOfManufacture", formData.vehicle.yearOfManufacture);
+  const handleSubmit = async () => {
+    if (!token) {
+      return alert("You are not logged in. Please login and try again.");
+    }
 
-    // Proposal Data
-    form.append("policyId", formData.policyId);
-    form.append("userId", userId);
-    formData.addonIds.forEach((id) => form.append("addonIds", id));
+    try {
+      // Submit proposal
+      const proposalPayload = {
+        vehicleId: formData.vehicleId,
+        policyId: formData.policyId,
+        addonIds: formData.addonIds || [],
+      };
 
-    // Document Uploads
-    formData.documents.forEach((doc) => {
-      form.append("file", doc.file);
-      form.append("documentType", doc.documentType);
-    });
+      await axios.post(
+        "http://localhost:8080/api/proposal/submit",
+        proposalPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    fetch("/api/proposal/submit", {
-      method: "POST",
-      body: form,
-    })
-      .then((res) => res.text())
-      .then((msg) => {
-        alert(msg);
-        window.location.href = "/user/dashboard";
-      })
-      .catch(() => alert("Failed to submit proposal"));
+      // Get latest proposal
+      const { data: proposals } = await axios.get(
+        "http://localhost:8080/api/proposal/my",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const latestProposal = proposals.at(-1);
+      if (!latestProposal?.proposalId) {
+        throw new Error("Could not fetch proposal ID for document upload.");
+      }
+
+      // Upload documents
+      const documents = formData.documents || {};
+      for (const [type, file] of Object.entries(documents)) {
+        const form = new FormData();
+        form.append("proposalId", latestProposal.proposalId);
+        form.append("userId", userId);
+        form.append("documentType", type);
+        form.append("file", file);
+
+        await axios.post("http://localhost:8080/api/documents/upload", form, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      }
+
+      alert("Proposal and documents submitted successfully.");
+      window.location.href = "/user/dashboard";
+    } catch (err) {
+      console.error("Error in submission:", err);
+
+      const raw = err?.response?.data;
+      let message = "Something went wrong during submission.";
+
+      if (typeof raw === "string" && raw.includes("Duplicate entry")) {
+        message =
+          "A proposal already exists for this vehicle. Please check your applications.";
+      } else if (raw?.message) {
+        message = raw.message;
+      } else if (err?.message) {
+        message = err.message;
+      }
+
+      alert(message);
+    }
   };
 
   return (
     <div>
-      <h5>Review & Submit</h5>
-      <p className="text-muted">
-        Please review your details before submission.
-      </p>
+      <h5 className="mb-3">Step 5: Review & Submit</h5>
 
-      <div className="mb-3">
-        <h6>Vehicle Details</h6>
-        <p className="mb-1">
-          <strong>Registration:</strong> {formData.vehicle.registrationNumber}
-        </p>
-        <p className="mb-1">
-          <strong>Type:</strong> {formData.vehicle.vehicleType}
-        </p>
-        <p className="mb-1">
-          <strong>Make:</strong> {formData.vehicle.make}
-        </p>
-        <p className="mb-1">
-          <strong>Model:</strong> {formData.vehicle.model}
-        </p>
-        <p className="mb-1">
-          <strong>Year:</strong> {formData.vehicle.yearOfManufacture}
-        </p>
-      </div>
+      <ReviewItem label="Vehicle ID" value={formData.vehicleId} />
+      <ReviewItem label="Vehicle Type" value={formData.vehicleType} />
+      <ReviewItem label="Policy ID" value={formData.policyId} />
 
-      <div className="mb-3">
-        <h6>Selected Policy ID:</h6>
-        <p>{formData.policyId}</p>
-      </div>
+      {formData.addonIds?.length > 0 && (
+        <div className="mb-3">
+          <h6>Addon IDs:</h6>
+          <ul>
+            {formData.addonIds.map((id) => (
+              <li key={id}>Addon ID: {id}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-      <div className="mb-3">
-        <h6>Add-ons Selected:</h6>
-        <ul>
-          {formData.addonIds.length === 0 ? (
-            <li>No addons selected</li>
-          ) : (
-            formData.addonIds.map((id) => <li key={id}>Addon ID: {id}</li>)
-          )}
-        </ul>
-      </div>
+      {formData.documents && (
+        <div className="mb-3">
+          <h6>Documents:</h6>
+          <ul>
+            {Object.entries(formData.documents).map(([type, file]) => (
+              <li key={type}>
+                {type}: <strong>{file.name}</strong>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-      <div className="d-flex justify-content-between">
+      <div className="d-flex justify-content-between mt-4">
         <button className="btn btn-secondary" onClick={prevStep}>
-          Back
+          ← Back
         </button>
         <button className="btn btn-success" onClick={handleSubmit}>
           Submit Proposal
@@ -89,5 +122,12 @@ const Step5ReviewSubmit = ({ formData, prevStep }) => {
     </div>
   );
 };
+
+const ReviewItem = ({ label, value }) => (
+  <div className="mb-3">
+    <h6>{label}:</h6>
+    <p>{value}</p>
+  </div>
+);
 
 export default Step5ReviewSubmit;

@@ -1,12 +1,13 @@
 package com.hexaware.AIMS.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.hexaware.AIMS.model.enums.ClaimStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
-import com.hexaware.AIMS.model.enums.ClaimStatus;
-
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Claim {
 
     @Id
@@ -23,33 +24,36 @@ public class Claim {
 
     @ManyToOne
     @JoinColumn(name = "approved_by")
-    private User approvedBy; 
+    private User approvedBy;
 
     @Column(nullable = false)
     private String claimReason;
 
     private String officerRemarks;
 
+    @Column(nullable = false)
+    private double claimAmountRequested;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ClaimStatus status;
 
     private LocalDate submittedDate;
-
     private LocalDate decisionDate;
 
     // Constructors
     public Claim() {}
 
-    public Claim(IssuedPolicy issuedPolicy, User submittedBy, String claimReason, ClaimStatus status, LocalDate submittedDate) {
+    public Claim(IssuedPolicy issuedPolicy, User submittedBy, String claimReason, double claimAmountRequested, ClaimStatus status, LocalDate submittedDate) {
         this.issuedPolicy = issuedPolicy;
         this.submittedBy = submittedBy;
         this.claimReason = claimReason;
+        this.claimAmountRequested = claimAmountRequested;
         this.status = status;
         this.submittedDate = submittedDate;
     }
 
-    // Getters & Setters
+    // Getters and Setters
     public int getClaimId() { return claimId; }
     public void setClaimId(int claimId) { this.claimId = claimId; }
 
@@ -67,6 +71,9 @@ public class Claim {
 
     public String getOfficerRemarks() { return officerRemarks; }
     public void setOfficerRemarks(String officerRemarks) { this.officerRemarks = officerRemarks; }
+
+    public double getClaimAmountRequested() { return claimAmountRequested; }
+    public void setClaimAmountRequested(double claimAmountRequested) { this.claimAmountRequested = claimAmountRequested; }
 
     public ClaimStatus getStatus() { return status; }
     public void setStatus(ClaimStatus status) { this.status = status; }

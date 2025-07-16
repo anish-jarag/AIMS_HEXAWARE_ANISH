@@ -1,10 +1,13 @@
 package com.hexaware.AIMS.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.hexaware.AIMS.model.enums.VehicleType;
 
 import jakarta.persistence.*;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Vehicle {
 
     @Id
@@ -25,6 +28,7 @@ public class Vehicle {
     private int yearOfManufacture;
 
     @ManyToOne
+    @JsonIgnore
     private User owner;
 
     // Constructors

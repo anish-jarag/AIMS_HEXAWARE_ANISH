@@ -1,9 +1,11 @@
 package com.hexaware.AIMS.service;
 
+import com.hexaware.AIMS.model.IssuedPolicy;
 import com.hexaware.AIMS.model.Proposal;
 import com.hexaware.AIMS.model.ProposalDocument;
 import com.hexaware.AIMS.model.User;
 import com.hexaware.AIMS.model.enums.DocumentType;
+import com.hexaware.AIMS.repository.IssuedPolicyRepository;
 import com.hexaware.AIMS.repository.ProposalDocumentRepository;
 import com.hexaware.AIMS.repository.ProposalRepository;
 import com.hexaware.AIMS.repository.UserRepository;
@@ -26,6 +28,9 @@ public class ProposalDocumentService {
 
     @Autowired
     private UserRepository userRepo;
+
+    @Autowired
+    private IssuedPolicyRepository issuedPolicyRepo;
 
     // Upload a new document
     public String uploadDocument(int proposalId, int userId, MultipartFile file, DocumentType type) {
@@ -57,6 +62,14 @@ public class ProposalDocumentService {
     public List<ProposalDocument> getDocumentsByProposal(int proposalId) {
         Optional<Proposal> proposalOpt = proposalRepo.findById(proposalId);
         return proposalOpt.map(docRepo::findByProposal).orElse(Collections.emptyList());
+    }
+
+    public List<ProposalDocument> getDocumentsByIssuedPolicyId(int issuedPolicyId) {
+        IssuedPolicy policy = issuedPolicyRepo.findById(issuedPolicyId)
+            .orElseThrow(() -> new NoSuchElementException("Issued policy not found"));
+
+        Proposal proposal = policy.getProposal();
+        return docRepo.findByProposal(proposal);
     }
 
     // Delete a document

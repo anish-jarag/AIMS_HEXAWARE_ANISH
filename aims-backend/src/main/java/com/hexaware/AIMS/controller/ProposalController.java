@@ -1,5 +1,6 @@
 package com.hexaware.AIMS.controller;
 
+import com.hexaware.AIMS.dto.ProposalRequest;
 import com.hexaware.AIMS.model.*;
 import com.hexaware.AIMS.model.enums.Role;
 import com.hexaware.AIMS.service.ProposalService;
@@ -24,14 +25,17 @@ public class ProposalController {
     private UserService userService;
 
     @PostMapping("/submit")
-    public ResponseEntity<String> submitProposal(@RequestParam int vehicleId,
-                                                 @RequestParam int policyId,
-                                                 @RequestParam List<Integer> addonIds,
-                                                 @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<String> submitProposal(@RequestBody ProposalRequest payload,
+                                                @AuthenticationPrincipal UserDetails userDetails) {
         Optional<User> userOpt = userService.getUserByEmail(userDetails.getUsername());
         if (userOpt.isEmpty()) return ResponseEntity.status(404).body("User not found");
 
-        String result = proposalService.submitProposal(userOpt.get(), vehicleId, policyId, addonIds);
+        String result = proposalService.submitProposal(
+            userOpt.get(),
+            payload.getVehicleId(),
+            payload.getPolicyId(),
+            payload.getAddonIds()
+        );
         return ResponseEntity.ok(result);
     }
 
@@ -42,6 +46,30 @@ public class ProposalController {
 
         return ResponseEntity.ok(proposalService.getProposalsByUser(userOpt.get()));
     }
+
+    @GetMapping("/{proposalId}")
+    public ResponseEntity<?> getProposalById(@PathVariable int proposalId,
+                                            @AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> userOpt = userService.getUserByEmail(userDetails.getUsername());
+        if (userOpt.isEmpty()) return ResponseEntity.status(404).body("User not found");
+
+        Optional<Proposal> proposalOpt = proposalService.getProposalById(proposalId);
+        if (proposalOpt.isEmpty()) return ResponseEntity.status(404).body("Proposal not found");
+
+        Proposal proposal = proposalOpt.get();
+        User currentUser = userOpt.get();
+
+        // Allow only the owner or an officer to view
+        boolean isOwner = proposal.getUser().getUserId() == currentUser.getUserId();
+        boolean isOfficer = currentUser.getRole() == Role.OFFICER;
+
+        if (!isOwner && !isOfficer)
+            return ResponseEntity.status(403).body("Access denied");
+
+        return ResponseEntity.ok(proposal);
+    }
+
+
     
     @GetMapping("/all-submitted")
     public ResponseEntity<List<Proposal>> getAllSubmittedProposals(@AuthenticationPrincipal UserDetails userDetails) {

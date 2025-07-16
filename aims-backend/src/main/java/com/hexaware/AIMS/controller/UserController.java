@@ -52,13 +52,14 @@ public class UserController {
         return ResponseEntity.ok(userService.changePassword(userOpt.get(), newPassword));
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
-        Optional<User> userOpt = userService.getUserByEmail(userDetails.getUsername());
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<String> deleteUserById(@PathVariable int userId) {
+        Optional<User> userOpt = userService.getUserById(userId);
         if (userOpt.isEmpty()) return ResponseEntity.status(404).body("User not found");
 
         return ResponseEntity.ok(userService.deleteUser(userOpt.get()));
     }
+
 
     @GetMapping("/all")
     public ResponseEntity<List<User>> getAllUsers() {

@@ -1,73 +1,80 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+const documentTypes = [
+  "AADHAAR",
+  "PAN",
+  "RC_BOOK",
+  "INSPECTION_REPORT",
+  "ACCIDENT_IMAGE",
+  "OTHER",
+];
 
 const Step4UploadDocuments = ({
-  documents,
-  setDocuments,
+  formData,
+  setFormData,
   nextStep,
   prevStep,
 }) => {
-  const [newDoc, setNewDoc] = useState({ file: null, documentType: "" });
+  const [files, setFiles] = useState({});
 
-  const handleFileChange = (e) => {
-    setNewDoc({ ...newDoc, file: e.target.files[0] });
-  };
-
-  const handleTypeChange = (e) => {
-    setNewDoc({ ...newDoc, documentType: e.target.value });
-  };
-
-  const addDocument = () => {
-    if (newDoc.file && newDoc.documentType) {
-      setDocuments([...documents, newDoc]);
-      setNewDoc({ file: null, documentType: "" });
+  useEffect(() => {
+    if (formData.documents) {
+      setFiles(formData.documents);
     }
+  }, [formData.documents]);
+
+  const handleFileChange = (e, docType) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFiles((prev) => ({ ...prev, [docType]: file }));
+    }
+  };
+
+  const handleNext = () => {
+    setFormData({ ...formData, documents: files });
+    nextStep();
+  };
+
+  const formatLabel = (label) => {
+    return label
+      .split("_")
+      .map((word) => word[0] + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   return (
     <div>
-      <h5>Upload Supporting Documents</h5>
-      <p className="text-muted">Upload driving license, RC book, etc.</p>
+      <h5 className="mb-3">Step 4: Upload Required Documents</h5>
+      <p className="text-muted">
+        Please upload clear and valid copies (PDF, JPG, PNG).
+      </p>
 
-      <div className="mb-3">
-        <select
-          className="form-select mb-2"
-          value={newDoc.documentType}
-          onChange={handleTypeChange}
-        >
-          <option value="">Select Document Type</option>
-          <option value="DRIVING_LICENSE">Driving License</option>
-          <option value="RC_BOOK">RC Book</option>
-          <option value="VEHICLE_INSPECTION">Vehicle Inspection Report</option>
-        </select>
-        <input
-          type="file"
-          className="form-control"
-          onChange={handleFileChange}
-        />
-        <button className="btn btn-outline-primary mt-2" onClick={addDocument}>
-          Add Document
-        </button>
+      <div className="row">
+        {documentTypes.map((type) => (
+          <div className="col-md-6 mb-3" key={type}>
+            <label className="form-label fw-semibold">
+              {formatLabel(type)}
+            </label>
+            <input
+              type="file"
+              className="form-control"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => handleFileChange(e, type)}
+            />
+            {files[type] && (
+              <small className="text-success">
+                ✔ Selected: {files[type].name}
+              </small>
+            )}
+          </div>
+        ))}
       </div>
 
-      {documents.length > 0 && (
-        <ul className="list-group mb-3">
-          {documents.map((doc, index) => (
-            <li
-              className="list-group-item d-flex justify-content-between"
-              key={index}
-            >
-              <span>{doc.documentType}</span>
-              <span>{doc.file.name}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="d-flex justify-content-between">
+      <div className="d-flex justify-content-between mt-4">
         <button className="btn btn-secondary" onClick={prevStep}>
           Back
         </button>
-        <button className="btn btn-primary" onClick={nextStep}>
+        <button className="btn btn-primary" onClick={handleNext}>
           Next
         </button>
       </div>

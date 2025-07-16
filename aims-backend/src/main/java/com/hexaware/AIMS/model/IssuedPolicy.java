@@ -3,8 +3,11 @@ package com.hexaware.AIMS.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "issued_policies")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class IssuedPolicy {
 
     @Id
@@ -23,6 +26,8 @@ public class IssuedPolicy {
     @JoinColumn(name = "proposal_id", unique = true)
     private Proposal proposal;
 
+    private double coverageAmount;
+
     private LocalDate startDate;
 
     private LocalDate endDate;
@@ -32,10 +37,11 @@ public class IssuedPolicy {
     // Constructors
     public IssuedPolicy() {}
 
-    public IssuedPolicy(User user, Policy policy, Proposal proposal, LocalDate startDate, LocalDate endDate, String policyDocumentPath) {
+    public IssuedPolicy(User user, Policy policy, Proposal proposal, double coverageAmount,LocalDate startDate, LocalDate endDate, String policyDocumentPath) {
         this.user = user;
         this.policy = policy;
         this.proposal = proposal;
+        this.coverageAmount = coverageAmount;
         this.startDate = startDate;
         this.endDate = endDate;
         this.policyDocumentPath = policyDocumentPath;
@@ -62,4 +68,7 @@ public class IssuedPolicy {
 
     public String getPolicyDocumentPath() { return policyDocumentPath; }
     public void setPolicyDocumentPath(String policyDocumentPath) { this.policyDocumentPath = policyDocumentPath; }
+
+    public double getCoverageAmount() { return coverageAmount; }
+    public void setCoverageAmount(double coverageAmount) { this.coverageAmount = coverageAmount; }
 }

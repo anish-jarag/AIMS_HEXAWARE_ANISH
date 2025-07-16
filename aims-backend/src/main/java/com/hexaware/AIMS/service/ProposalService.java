@@ -27,13 +27,27 @@ public class ProposalService {
 
     @Autowired PolicyAddonRepository policyAddonRepository;
 
-    public String submitProposal(User user, int vehicleId, int policyId, List<Integer> addonIds) {
+   public String submitProposal(User user, int vehicleId, int policyId, List<Integer> addonIds) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId).orElse(null);
         Policy policy = policyRepository.findById(policyId).orElse(null);
 
         if (vehicle == null) return "Vehicle not found.";
         if (policy == null) return "Policy not found.";
         if (!vehicle.getOwner().equals(user)) return "Unauthorized vehicle access.";
+
+        List<Proposal> existingProposals = proposalRepository.findByUser(user);
+        boolean duplicateExists = existingProposals.stream()
+            .anyMatch(p ->
+                p.getVehicle().getVehicleId() == vehicleId &&
+                (p.getStatus() == ProposalStatus.SUBMITTED ||
+                p.getStatus() == ProposalStatus.QUOTE_GENERATED ||
+                p.getStatus() == ProposalStatus.PAYMENT_PENDING ||
+                p.getStatus() == ProposalStatus.APPROVED)
+            );
+
+        if (duplicateExists) {
+            throw new IllegalArgumentException("A proposal is already in process for this vehicle.");
+        }
 
         Proposal proposal = new Proposal();
         proposal.setUser(user);
@@ -42,34 +56,32 @@ public class ProposalService {
         proposal.setStatus(ProposalStatus.SUBMITTED);
         proposal.setSubmissionDate(LocalDate.now());
 
-        // Initialize empty addon list
         List<ProposalAddon> proposalAddons = new ArrayList<>();
-
-        // If addons selected
         if (addonIds != null && !addonIds.isEmpty()) {
             List<PolicyAddon> selectedAddons = policyAddonRepository.findAllById(addonIds);
-
             for (PolicyAddon addon : selectedAddons) {
                 ProposalAddon pa = new ProposalAddon();
-                pa.setProposal(proposal); 
+                pa.setProposal(proposal);
                 pa.setAddon(addon);
                 proposalAddons.add(pa);
             }
-
-            proposal.setSelectedAddons(proposalAddons); 
+            proposal.setSelectedAddons(proposalAddons);
         }
 
-        // Save proposal (cascade will save addons if mapped properly)
         proposalRepository.save(proposal);
-
         return "Proposal submitted successfully.";
     }
+
 
 
     public List<Proposal> getProposalsByUser(User user) {
         return proposalRepository.findByUser(user);
     }
-    
+
+    public Optional<Proposal> getProposalById(int id) {
+        return proposalRepository.findById(id);
+    }
+
     public List<Proposal> getAllSubmittedProposals() {
         return proposalRepository.findByStatus(ProposalStatus.SUBMITTED);
     }
