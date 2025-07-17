@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const Step3Addons = ({
   policyId,
@@ -10,25 +11,25 @@ const Step3Addons = ({
 }) => {
   const [addons, setAddons] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
     const fetchAddons = async () => {
       setLoading(true);
       try {
         const res = await axios.get(
-          `http://localhost:8080/api/policy-addons/policy/${policyId}`,
+          `${BASE_URL}/policy-addons/policy/${policyId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
             },
           }
         );
-        setAddons(res.data);
-        setError("");
+        setAddons(res.data || []);
       } catch (err) {
         console.error("Failed to load addons", err);
-        setError("Something went wrong while loading addons.");
+        toast.error("Something went wrong while loading addons.");
+        setAddons([]);
       } finally {
         setLoading(false);
       }
@@ -47,26 +48,25 @@ const Step3Addons = ({
 
   return (
     <div>
-      <h5 className="mb-3">Step 3: Select Add-ons (optional)</h5>
-      <p className="text-muted">Choose additional benefits for your policy.</p>
+      <h5 className="fw-bold mb-3">Step 3: Select Add-ons (Optional)</h5>
+      <p className="text-muted">Choose any extra coverage for this policy.</p>
 
       {loading ? (
         <p>Loading add-ons...</p>
-      ) : error ? (
-        <p className="text-danger">{error}</p>
       ) : addons.length === 0 ? (
-        <p>No add-ons available for this policy.</p>
+        <p className="text-muted">No add-ons available for this policy.</p>
       ) : (
-        <ul className="list-group mb-3">
+        <div className="list-group shadow-sm mb-3">
           {addons.map((addon) => (
-            <li
+            <label
               key={addon.addonId}
               className="list-group-item d-flex justify-content-between align-items-center"
+              style={{ cursor: "pointer" }}
             >
-              <div>
+              <div className="me-3">
                 <strong>{addon.addonName}</strong>
-                <p className="mb-0 text-muted small">{addon.description}</p>
-                <span className="badge bg-primary mt-1">
+                <p className="mb-1 text-muted small">{addon.description}</p>
+                <span className="badge bg-primary">
                   ₹{addon.additionalCost}
                 </span>
               </div>
@@ -75,17 +75,17 @@ const Step3Addons = ({
                 checked={addonIds.includes(addon.addonId)}
                 onChange={() => handleToggleAddon(addon.addonId)}
               />
-            </li>
+            </label>
           ))}
-        </ul>
+        </div>
       )}
 
-      <div className="d-flex justify-content-between mt-3">
-        <button className="btn btn-secondary" onClick={prevStep}>
-          Back
+      <div className="d-flex justify-content-between mt-4">
+        <button className="btn btn-outline-secondary" onClick={prevStep}>
+          ← Back
         </button>
         <button className="btn btn-primary" onClick={nextStep}>
-          Next
+          Next →
         </button>
       </div>
     </div>

@@ -14,4 +14,7 @@ public interface ProposalRepository extends JpaRepository<Proposal, Integer> {
     List<Proposal> findByStatus(ProposalStatus status);
     List<Proposal> findByPolicy(Policy policy);
     List<Proposal> findByUser_UserIdOrderByProposalIdDesc(int userId);
+    List<Proposal> findByStatusIn(List<ProposalStatus> of);
+    int countByStatus(ProposalStatus status);
+
 }

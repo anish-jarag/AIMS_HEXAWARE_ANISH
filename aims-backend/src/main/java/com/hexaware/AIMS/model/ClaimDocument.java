@@ -31,7 +31,7 @@ public class ClaimDocument {
     private LocalDateTime uploadedAt = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30)
     private DocumentType documentType;
 
     @ManyToOne(optional = false)

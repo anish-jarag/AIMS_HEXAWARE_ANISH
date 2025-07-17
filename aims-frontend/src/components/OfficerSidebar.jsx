@@ -24,35 +24,30 @@ const OfficerSidebar = () => {
 
   return (
     <div
-      className="d-flex flex-column shadow-sm"
+      className="d-flex flex-column shadow-sm bg-light"
       style={{
         width: "250px",
         minHeight: "100vh",
         padding: "2rem 1.25rem",
-        background: "#f8f9fa",
         borderRight: "1px solid #dee2e6",
         position: "sticky",
         top: 0,
       }}
     >
       <div className="mb-5 text-center">
-        <div className="fw-bold text-dark" style={{ fontSize: "1.3rem" }}>
-          HexaShield
-        </div>
-        <div className="text-muted" style={{ fontSize: "0.85rem" }}>
-          Officer Panel
-        </div>
+        <div className="fw-bold text-dark fs-4">HexaShield</div>
+        <div className="text-muted small">Officer Panel</div>
       </div>
 
       <nav className="flex-grow-1">
-        <ul className="nav flex-column">
+        <ul className="nav flex-column gap-1">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname.startsWith(item.path);
             return (
-              <li className="nav-item mb-1" key={item.path}>
+              <li className="nav-item" key={item.path}>
                 <Link
                   to={item.path}
-                  className={`nav-link d-block px-3 py-2 rounded ${
+                  className={`nav-link w-100 text-start px-3 py-2 rounded ${
                     isActive
                       ? "bg-primary text-white fw-semibold shadow-sm"
                       : "text-dark"

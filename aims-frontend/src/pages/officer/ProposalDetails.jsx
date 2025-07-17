@@ -6,11 +6,13 @@ const ProposalDetails = () => {
   const [proposal, setProposal] = useState(null);
   const navigate = useNavigate();
 
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  const token = localStorage.getItem("jwtToken");
+
   useEffect(() => {
-    const token = localStorage.getItem("jwtToken");
     if (!token) return;
 
-    fetch(`http://localhost:8080/api/proposal/${proposalId}`, {
+    fetch(`${BASE_URL}/proposal/${proposalId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -18,16 +20,18 @@ const ProposalDetails = () => {
         return res.json();
       })
       .then(setProposal)
-      .catch((err) => {
-        console.error(err);
-      });
-  }, [proposalId]);
+      .catch((err) => console.error(err));
+  }, [proposalId, token, BASE_URL]);
 
-  const handleDecision = (decision) => {
-    const token = localStorage.getItem("jwtToken");
+  const handleDecision = (decisionType) => {
     if (!token) return;
 
-    fetch(`http://localhost:8080/api/proposal/${decision}/${proposalId}`, {
+    const url =
+      decisionType === "request-docs"
+        ? `${BASE_URL}/proposal/request-docs/${proposalId}`
+        : `${BASE_URL}/proposal/${decisionType}/${proposalId}`;
+
+    fetch(url, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -41,7 +45,7 @@ const ProposalDetails = () => {
       })
       .catch((err) => {
         console.error(err);
-        alert(`Failed to ${decision} proposal.`);
+        alert(`Failed to ${decisionType.replace("-", " ")} proposal.`);
       });
   };
 
@@ -117,6 +121,13 @@ const ProposalDetails = () => {
           Reject Proposal
         </button>
         <button
+          className="btn btn-warning"
+          disabled={!proposal}
+          onClick={() => handleDecision("request-docs")}
+        >
+          Request More Documents
+        </button>
+        <button
           className="btn btn-primary"
           disabled={!proposal}
           onClick={() =>
@@ -125,18 +136,9 @@ const ProposalDetails = () => {
         >
           View Submitted Documents
         </button>
-        {/* <button
-          className="btn btn-warning"
-          onClick={() =>
-            alert("Feature under construction: Request Additional Documents")
-          }
-        >
-          Request More Documents
-        </button> */}
         <button
           className="btn btn-outline-primary"
-          disabled={!proposal}
-          onClick={() => navigate(`/admin/proposals`)}
+          onClick={() => navigate("/admin/proposals")}
         >
           Back
         </button>

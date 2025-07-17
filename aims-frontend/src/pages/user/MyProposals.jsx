@@ -128,6 +128,19 @@ const MyProposals = () => {
                         </button>
                       </>
                     )}
+
+                    {p.status === "AWAITING_DOCUMENTS" && (
+                      <div className="mt-3">
+                        <button
+                          className="btn btn-sm btn-warning"
+                          onClick={() =>
+                            navigate(`/user/proposals/upload/${p.proposalId}`)
+                          }
+                        >
+                          Upload Additional Docs
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="card-footer bg-white text-end border-0">
                     <button

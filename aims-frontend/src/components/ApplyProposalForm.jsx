@@ -4,6 +4,8 @@ import Step2Policy from "./steps/Step2Policy";
 import Step3Addons from "./steps/Step3Addons";
 import Step4UploadDocuments from "./steps/Step4UploadDocuments";
 import Step5ReviewSubmit from "./steps/Step5ReviewSubmit";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ApplyProposalForm = () => {
   const [step, setStep] = useState(1);
@@ -15,10 +17,12 @@ const ApplyProposalForm = () => {
     documents: {},
   });
   const [userId, setUserId] = useState(null);
+
   const token = localStorage.getItem("jwtToken");
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/user/me", {
+    fetch(`${BASE_URL}/user/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -29,8 +33,10 @@ const ApplyProposalForm = () => {
       .then((data) => setUserId(data.userId))
       .catch((err) => {
         console.error("Failed to fetch user ID:", err);
-        alert("Authentication failed. Please login again.");
-        window.location.href = "/login";
+        toast.error("Authentication failed. Please login again.");
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
       });
   }, [token]);
 
@@ -85,18 +91,20 @@ const ApplyProposalForm = () => {
           <Step5ReviewSubmit
             formData={formData}
             userId={userId}
-            nextStep={nextStep}
             prevStep={prevStep}
           />
         );
       default:
-        return <p>Invalid step</p>;
+        return <p className="text-danger">Invalid step. Please refresh.</p>;
     }
   };
 
   return (
     <div className="container py-5">
-      <h4 className="mb-4">Submit New Insurance Proposal</h4>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <h4 className="mb-4 fw-bold text-center">
+        Submit New Insurance Proposal
+      </h4>
       <div className="card p-4 shadow-sm">{renderStep()}</div>
       <div className="text-muted mt-3 text-end">Step {step} of 5</div>
     </div>

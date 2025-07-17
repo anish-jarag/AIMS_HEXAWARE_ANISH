@@ -26,25 +26,28 @@ public class ClaimService {
     private UserRepository userRepo;
 
     // File a new claim
-    public String submitClaim(int issuedPolicyId, int userId, String reason) {
+    public Map<String, Object> submitClaim(int issuedPolicyId, int userId, String reason) {
         Optional<IssuedPolicy> policyOpt = issuedPolicyRepo.findById(issuedPolicyId);
         Optional<User> userOpt = userRepo.findById(userId);
 
-        if (policyOpt.isEmpty()) return "Issued Policy not found";
-        if (userOpt.isEmpty()) return "User not found";
+        if (policyOpt.isEmpty()) return Map.of("error", "Issued Policy not found");
+        if (userOpt.isEmpty()) return Map.of("error", "User not found");
 
-        IssuedPolicy policy = policyOpt.get();
-       
         Claim claim = new Claim();
-        claim.setIssuedPolicy(policy);
+        claim.setIssuedPolicy(policyOpt.get());
         claim.setSubmittedBy(userOpt.get());
         claim.setClaimReason(reason);
         claim.setStatus(ClaimStatus.PENDING);
         claim.setSubmittedDate(LocalDate.now());
 
         claimRepo.save(claim);
-        return "Claim submitted successfully";
+
+        return Map.of(
+            "message", "Claim submitted successfully",
+            "claimId", claim.getClaimId()
+        );
     }
+
 
     // Approve or reject a claim
     public String decideClaim(int claimId, int officerId, ClaimStatus decision, String remarks) {

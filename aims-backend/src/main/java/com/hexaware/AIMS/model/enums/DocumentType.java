@@ -6,5 +6,6 @@ public enum DocumentType {
     RC_BOOK,
     INSPECTION_REPORT,
     ACCIDENT_IMAGE,
+    CLAIM_IMAGE ,
     OTHER
 }

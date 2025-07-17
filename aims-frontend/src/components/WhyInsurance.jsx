@@ -1,26 +1,43 @@
+import React from "react";
+
+const reasons = [
+  {
+    title: "Financial Safety",
+    description: "Protects you from unexpected repair or medical costs.",
+    icon: "bi-currency-rupee",
+  },
+  {
+    title: "Legal Compliance",
+    description:
+      "Stay compliant with government regulations on vehicle insurance.",
+    icon: "bi-file-earmark-check",
+  },
+  {
+    title: "Peace of Mind",
+    description: "Travel worry‑free knowing you have reliable coverage.",
+    icon: "bi-shield-lock",
+  },
+];
+
 const WhyInsurance = () => (
-  <section className="container py-5 text-center">
-    <h2>Why Choose Insurance?</h2>
-    <div className="row mt-4">
-      <div className="col-md-4 mb-3">
-        <div className="p-3">
-          <h4>Financial Safety</h4>
-          <p>Protects you from unexpected repair or medical costs.</p>
-        </div>
-      </div>
-      <div className="col-md-4 mb-3">
-        <div className="p-3">
-          <h4>Legal Compliance</h4>
-          <p>
-            Stay compliant with government regulations on vehicle insurance.
-          </p>
-        </div>
-      </div>
-      <div className="col-md-4 mb-3">
-        <div className="p-3">
-          <h4>Peace of Mind</h4>
-          <p>Travel worry‑free knowing you have coverage.</p>
-        </div>
+  <section className="bg-light py-5">
+    <div className="container text-center">
+      <h2 className="fw-bold mb-4">Why Choose Insurance?</h2>
+
+      <div className="row justify-content-center">
+        {reasons.map((r, idx) => (
+          <div className="col-sm-12 col-md-6 col-lg-4 mb-4" key={idx}>
+            <div className="card border-0 shadow-sm h-100">
+              <div className="card-body">
+                <div className="mb-3">
+                  <i className={`bi ${r.icon} display-5 text-primary`} />
+                </div>
+                <h5 className="card-title fw-semibold">{r.title}</h5>
+                <p className="card-text text-muted">{r.description}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   </section>

@@ -1,6 +1,11 @@
+// src/pages/user/SubmitClaim.jsx
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import UserNavbar from "../../components/UserNavbar";
+import { toast } from "react-toastify";
+
+const BASE_URL = "http://localhost:8080/api";
 
 const SubmitClaim = () => {
   const [policies, setPolicies] = useState([]);
@@ -16,13 +21,13 @@ const SubmitClaim = () => {
     if (!userId || !token) return;
 
     axios
-      .get(`http://localhost:8080/api/issued/user/${userId}`, {
+      .get(`${BASE_URL}/issued/user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setPolicies(res.data))
       .catch((err) => {
-        console.error("Error fetching issued policies:", err);
-        alert("Failed to load policies.");
+        console.error("Error fetching policies:", err);
+        toast.error("Failed to load issued policies.");
       })
       .finally(() => setLoading(false));
   }, [userId]);
@@ -31,57 +36,64 @@ const SubmitClaim = () => {
     e.preventDefault();
 
     if (!selectedPolicyId || !reason) {
-      alert("Please fill in all fields.");
+      toast.warning("Please fill in all required fields.");
       return;
     }
 
     try {
-      // 1. Submit claim
-      const claimRes = await axios.post(
-        `http://localhost:8080/api/claims/submit`,
-        null,
-        {
-          params: {
-            issuedPolicyId: selectedPolicyId,
-            userId,
-            reason,
-            amount: 10000, // or some fixed/test amount
-          },
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const claimRes = await axios.post(`${BASE_URL}/claims/submit`, null, {
+        params: {
+          issuedPolicyId: selectedPolicyId,
+          userId,
+          reason,
+        },
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      const claimMessage = claimRes.data;
-      alert(claimMessage);
+      const resData = claimRes.data;
+      let claimId;
 
-      // 2. Upload document if file is selected
-      if (file) {
-        const uploadForm = new FormData();
-        uploadForm.append("claimId", claimMessage.match(/\d+/)[0]); // If message returns "Claim submitted with ID: 12"
-        uploadForm.append("userId", userId);
-        uploadForm.append("documentType", "CLAIM_IMAGE"); // enum
-        uploadForm.append("file", file);
-
-        await axios.post(
-          "http://localhost:8080/api/claim-documents/upload",
-          uploadForm,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-
-        alert("Image uploaded successfully.");
+      // If backend returns structured JSON
+      if (resData && typeof resData === "object") {
+        claimId = resData.claimId;
       }
 
+      if (!claimId) {
+        throw new Error("Claim submitted but claim ID not found.");
+      }
+
+      // Upload image if provided
+      if (file) {
+        const formData = new FormData();
+        formData.append("claimId", claimId);
+        formData.append("userId", userId);
+        formData.append("documentType", "CLAIM_IMAGE");
+        formData.append("file", file);
+
+        await axios.post(`${BASE_URL}/claim-documents/upload`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        toast.success("Claim and image uploaded successfully.");
+      } else {
+        toast.success("Claim submitted successfully.");
+      }
+
+      // Reset fields
+      setSelectedPolicyId("");
       setReason("");
       setFile(null);
-      setSelectedPolicyId("");
     } catch (err) {
       console.error("Error submitting claim:", err);
-      alert("Claim submission failed.");
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data ||
+        err?.message ||
+        "❌ Unknown error occurred.";
+      toast.error(msg.toString());
     }
   };
 
@@ -106,7 +118,7 @@ const SubmitClaim = () => {
             style={{ maxWidth: 600 }}
           >
             <div className="mb-3">
-              <label className="form-label">Select Issued Policy</label>
+              <label className="form-label fw-semibold">Issued Policy</label>
               <select
                 className="form-select"
                 value={selectedPolicyId}
@@ -116,17 +128,15 @@ const SubmitClaim = () => {
                 <option value="">-- Choose Vehicle & Policy --</option>
                 {policies.map((p) => (
                   <option key={p.issuedPolicyId} value={p.issuedPolicyId}>
-                    #{p.issuedPolicyId} - [
-                    {p.proposal?.vehicle?.registrationNumber}]{" "}
-                    {p.proposal?.vehicle?.make} {p.proposal?.vehicle?.model} (
-                    {p.policy?.policyName})
+                    #{p.issuedPolicyId} - {p.policy?.policyName} (
+                    {p.proposal?.vehicle?.registrationNumber})
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Claim Reason</label>
+              <label className="form-label fw-semibold">Claim Reason</label>
               <textarea
                 className="form-control"
                 value={reason}
@@ -134,11 +144,13 @@ const SubmitClaim = () => {
                 rows="4"
                 placeholder="Describe your reason for claim"
                 required
-              ></textarea>
+              />
             </div>
 
-            <div className="mb-3">
-              <label className="form-label">Upload Image (Optional)</label>
+            <div className="mb-4">
+              <label className="form-label fw-semibold">
+                Upload Image (Optional)
+              </label>
               <input
                 type="file"
                 className="form-control"
@@ -147,7 +159,9 @@ const SubmitClaim = () => {
               />
             </div>
 
-            <button className="btn btn-primary w-100">Submit Claim</button>
+            <button className="btn btn-primary w-100" type="submit">
+              Submit Claim
+            </button>
           </form>
         )}
       </div>

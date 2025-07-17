@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const slides = [
   {
@@ -28,11 +29,15 @@ const slides = [
 ];
 
 const HeroCarousel = () => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const carousel = document.querySelector("#heroCarousel");
-
     if (carousel && window.bootstrap) {
-      new window.bootstrap.Carousel(carousel);
+      new window.bootstrap.Carousel(carousel, {
+        interval: 5000,
+        ride: "carousel",
+      });
     }
   }, []);
 
@@ -41,51 +46,35 @@ const HeroCarousel = () => {
       <div className="carousel-inner">
         {slides.map((s, idx) => (
           <div
-            className={`carousel-item ${idx === 0 ? "active" : ""}`}
             key={idx}
+            className={`carousel-item ${idx === 0 ? "active" : ""}`}
           >
             <div
-              style={{
-                position: "relative",
-                height: "80vh",
-                overflow: "hidden",
-              }}
+              className="position-relative"
+              style={{ height: "80vh", overflow: "hidden" }}
             >
               <img
                 src={s.image}
-                className="d-block w-100"
                 alt={s.title}
+                className="d-block w-100"
                 style={{ height: "100%", objectFit: "cover" }}
               />
-              {/* Fullscreen dark overlay */}
               <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  backgroundColor: "rgba(0,0,0,0.6)",
-                }}
+                className="position-absolute top-0 start-0 w-100 h-100"
+                style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
               />
-              {/* Centered text content */}
               <div
-                className="d-flex flex-column justify-content-center align-items-center text-center px-3"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  zIndex: 2,
-                  color: "#fff",
-                }}
+                className="position-absolute top-50 start-50 translate-middle text-center text-white px-3"
+                style={{ zIndex: 2 }}
               >
-                <h1 className="display-4 fw-bold">{s.title}</h1>
+                <h1 className="display-4 fw-bold mb-2">{s.title}</h1>
                 <p className="lead">{s.subtitle}</p>
-                <a href={s.cta.link} className="btn btn-light btn-lg mt-3">
+                <button
+                  onClick={() => navigate(s.cta.link)}
+                  className="btn btn-light btn-lg mt-3"
+                >
                   {s.cta.text}
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -98,7 +87,8 @@ const HeroCarousel = () => {
         data-bs-target="#heroCarousel"
         data-bs-slide="prev"
       >
-        <span className="carousel-control-prev-icon" />
+        <span className="carousel-control-prev-icon" aria-hidden="true" />
+        <span className="visually-hidden">Previous</span>
       </button>
 
       <button
@@ -107,7 +97,8 @@ const HeroCarousel = () => {
         data-bs-target="#heroCarousel"
         data-bs-slide="next"
       >
-        <span className="carousel-control-next-icon" />
+        <span className="carousel-control-next-icon" aria-hidden="true" />
+        <span className="visually-hidden">Next</span>
       </button>
     </div>
   );

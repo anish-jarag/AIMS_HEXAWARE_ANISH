@@ -5,6 +5,7 @@ import com.hexaware.AIMS.model.enums.ClaimStatus;
 import com.hexaware.AIMS.service.ClaimService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,12 +19,13 @@ public class ClaimController {
     private ClaimService claimService;
 
     @PostMapping("/submit")
-    public String submitClaim(
+    public ResponseEntity<?> submitClaim(
             @RequestParam int issuedPolicyId,
             @RequestParam int userId,
             @RequestParam String reason) {
-        return claimService.submitClaim(issuedPolicyId, userId, reason);
+        return ResponseEntity.ok(claimService.submitClaim(issuedPolicyId, userId, reason));
     }
+
 
     @PutMapping("/decide")
     public String decideClaim(

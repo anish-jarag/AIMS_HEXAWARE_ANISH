@@ -7,6 +7,7 @@ import autoTable from "jspdf-autotable";
 
 const PaymentOverview = () => {
   const token = localStorage.getItem("jwtToken");
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
   const [view, setView] = useState("proposal");
   const [proposalPayments, setProposalPayments] = useState([]);
@@ -16,10 +17,10 @@ const PaymentOverview = () => {
     const fetchData = async () => {
       try {
         const [proposalRes, claimRes] = await Promise.all([
-          axios.get("http://localhost:8080/api/payments/all", {
+          axios.get(`${BASE_URL}/payments/all`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://localhost:8080/api/claim-payments/all", {
+          axios.get(`${BASE_URL}/claim-payments/all`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -29,8 +30,9 @@ const PaymentOverview = () => {
         console.error("Error fetching payments:", err);
       }
     };
-    fetchData();
-  }, []);
+
+    if (token && BASE_URL) fetchData();
+  }, [token, BASE_URL]);
 
   const data = view === "proposal" ? proposalPayments : claimPayments;
 

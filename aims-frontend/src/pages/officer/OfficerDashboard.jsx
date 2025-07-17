@@ -1,17 +1,51 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import OfficerSidebar from "../../components/OfficerSidebar";
 
 const OfficerDashboard = () => {
   const officerName = localStorage.getItem("name") || "Officer";
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  const token = localStorage.getItem("jwtToken");
 
-  const summary = {
-    totalProposals: 12,
-    pendingProposals: 3,
-    approvedProposals: 9,
-    totalClaims: 8,
-    approvedClaims: 5,
-    rejectedClaims: 2,
-  };
+  const [summary, setSummary] = useState({
+    totalProposals: 0,
+    pendingProposals: 0,
+    approvedProposals: 0,
+    totalClaims: 0,
+    approvedClaims: 0,
+    rejectedClaims: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!token || !BASE_URL) return;
+
+    const fetchSummary = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/dashboard/officer-summary`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch dashboard summary.");
+        }
+
+        const data = await res.json();
+        setSummary(data);
+      } catch (err) {
+        console.error(err);
+        setError("Unable to load dashboard data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSummary();
+  }, [BASE_URL, token]);
 
   const cards = [
     {
@@ -53,31 +87,27 @@ const OfficerDashboard = () => {
   ];
 
   return (
-    <div className="container-fluid">
-      <div className="row min-vh-100">
-        {/* Sidebar */}
-        <div
-          className="col-auto bg-light d-flex flex-column p-0"
-          style={{
-            width: "220px",
-            borderRight: "1px solid #dee2e6",
-            minHeight: "100vh",
-          }}
-        >
-          <OfficerSidebar />
-        </div>
+    <div className="d-flex min-vh-100">
+      {/* Sidebar */}
+      <div style={{ width: "250px", flexShrink: 0 }}>
+        <OfficerSidebar />
+      </div>
 
-        {/* Main Content */}
-        <div className="col ps-4 pe-4 py-4" style={{ marginLeft: "220px" }}>
-          <h2 className="mt-2">Welcome, {officerName}</h2>
-          <p className="text-muted">Here’s a quick overview of activity:</p>
+      {/* Main Content */}
+      <div className="flex-grow-1 px-4 py-4 bg-white">
+        <h2 className="mb-1">Welcome, {officerName}</h2>
+        <p className="text-muted mb-4">Here’s a quick overview of activity:</p>
 
-          {/* Cards */}
-          <div className="row g-3 mt-3">
+        {loading ? (
+          <div className="text-center text-muted">Loading data...</div>
+        ) : error ? (
+          <div className="alert alert-danger">{error}</div>
+        ) : (
+          <div className="row g-3">
             {cards.map((c, i) => (
-              <div className="col-md-4" key={i}>
+              <div className="col-sm-6 col-md-4" key={i}>
                 <div
-                  className={`card shadow-sm border-0 bg-${c.bg} text-white`}
+                  className={`card shadow-sm border-0 bg-${c.bg} text-white h-100`}
                 >
                   <div className="card-body d-flex align-items-center">
                     <i className={`${c.icon} fs-2 me-3`}></i>
@@ -90,7 +120,7 @@ const OfficerDashboard = () => {
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

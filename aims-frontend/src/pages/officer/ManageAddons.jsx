@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import OfficerSidebar from "../../components/OfficerSidebar";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const initialForm = {
   addonName: "",
@@ -16,27 +18,38 @@ const ManageAddons = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
 
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  const token = localStorage.getItem("jwtToken");
+
   // Load addons and policies
   const loadAddons = async () => {
-    const res = await fetch("http://localhost:8080/api/policy-addons/all", {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-      },
-    });
-    const data = await res.json();
-    setAddons(data);
+    try {
+      const res = await fetch(`${BASE_URL}/policy-addons/all`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      setAddons(data);
+    } catch {
+      toast.error("Failed to load addons");
+    }
   };
 
   const loadPolicies = async () => {
-    const res = await fetch("http://localhost:8080/api/policy/all", {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-      },
-    });
-    const data = await res.json();
-    setPolicies(data);
+    try {
+      const res = await fetch(`${BASE_URL}/policy/all`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      setPolicies(data);
+    } catch {
+      toast.error("Failed to load policies");
+    }
   };
 
   useEffect(() => {
@@ -47,45 +60,47 @@ const ManageAddons = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const url = isEditing
-      ? `http://localhost:8080/api/policy-addons/update/${editId}`
-      : `http://localhost:8080/api/policy-addons/add/${formData.policyId}`;
-
     const method = isEditing ? "PUT" : "POST";
+    const url = isEditing
+      ? `${BASE_URL}/policy-addons/update/${editId}`
+      : `${BASE_URL}/policy-addons/add/${formData.policyId}`;
 
     const body = {
-      addonName: formData.name,
+      addonName: formData.addonName,
       description: formData.description,
-      additionalCost: parseFloat(formData.extraCost),
+      additionalCost: parseFloat(formData.additionalCost),
       addonType: formData.addonType,
     };
 
-    const res = await fetch(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-      },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
 
-    if (res.ok) {
+      if (!res.ok) throw new Error("Failed to save addon");
+
+      toast.success(isEditing ? "Addon updated" : "Addon added");
       await loadAddons();
       setFormData(initialForm);
       setIsEditing(false);
       setEditId(null);
-    } else {
-      alert("Failed to save addon");
+    } catch (err) {
+      toast.error(err.message);
     }
   };
 
   const handleEdit = (addon) => {
     setFormData({
-      name: addon.addonName,
+      addonName: addon.addonName,
       description: addon.description,
-      extraCost: addon.additionalCost,
+      additionalCost: addon.additionalCost,
       addonType: addon.addonType,
-      policyId: addon.policy ? addon.policy.policyId : "",
+      policyId: addon.policy?.policyId || "",
     });
     setEditId(addon.addonId);
     setIsEditing(true);
@@ -94,39 +109,39 @@ const ManageAddons = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this addon?")) return;
 
-    const res = await fetch(
-      `http://localhost:8080/api/policy-addons/delete/${id}`,
-      {
+    try {
+      const res = await fetch(`${BASE_URL}/policy-addons/delete/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-        },
-      }
-    );
-    if (res.ok) {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Delete failed");
+
+      toast.success("Addon deleted");
       await loadAddons();
-    } else {
-      alert("Failed to delete addon");
+    } catch (err) {
+      toast.error(err.message);
     }
   };
 
   return (
     <div className="d-flex">
+      <ToastContainer position="top-right" autoClose={3000} />
       <OfficerSidebar />
 
       <div className="flex-grow-1 p-4">
         <h2 className="mb-4">Manage Policy Addons</h2>
 
-        {/* Addon Form */}
+        {/* Form */}
         <form className="card p-4 mb-4 shadow-sm" onSubmit={handleSubmit}>
           <div className="row mb-3">
             <div className="col-md-6">
               <input
                 className="form-control"
                 placeholder="Addon Name"
-                value={formData.name}
+                value={formData.addonName}
                 onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
+                  setFormData({ ...formData, addonName: e.target.value })
                 }
                 required
               />
@@ -136,9 +151,9 @@ const ManageAddons = () => {
                 className="form-control"
                 type="number"
                 placeholder="Extra Cost"
-                value={formData.extraCost}
+                value={formData.additionalCost}
                 onChange={(e) =>
-                  setFormData({ ...formData, extraCost: e.target.value })
+                  setFormData({ ...formData, additionalCost: e.target.value })
                 }
                 required
               />
@@ -197,25 +212,22 @@ const ManageAddons = () => {
           </button>
         </form>
 
-        {/* Addons List */}
+        {/* List */}
         <div className="row">
           {addons.map((a) => (
             <div className="col-md-4 mb-3" key={a.addonId}>
               <div className="card shadow-sm h-100">
                 <div className="card-body">
-                  <h5>{a.name}</h5>
+                  <h5 className="fw-bold">{a.addonName}</h5>
                   <p>{a.description}</p>
                   <p>
-                    <strong>Extra Cost:</strong> ₹{a.extraCost}
+                    <strong>Extra Cost:</strong> ₹{a.additionalCost}
                   </p>
                   <p>
                     <strong>Type:</strong> {a.addonType}
                   </p>
                   <p>
-                    <strong>Policy:</strong>{" "}
-                    {a.policy && a.policy.policyName
-                      ? a.policy.policyName
-                      : "N/A"}
+                    <strong>Policy:</strong> {a.policy?.policyName || "N/A"}
                   </p>
                 </div>
                 <div className="card-footer d-flex justify-content-between">

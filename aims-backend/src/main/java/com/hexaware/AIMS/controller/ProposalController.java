@@ -8,6 +8,7 @@ import com.hexaware.AIMS.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -18,24 +19,17 @@ import java.util.*;
 @RequestMapping("/api/proposal")
 public class ProposalController {
 
-    @Autowired
-    private ProposalService proposalService;
-
-    @Autowired
-    private UserService userService;
+    @Autowired private ProposalService proposalService;
+    @Autowired private UserService userService;
 
     @PostMapping("/submit")
     public ResponseEntity<String> submitProposal(@RequestBody ProposalRequest payload,
-                                                @AuthenticationPrincipal UserDetails userDetails) {
+                                                 @AuthenticationPrincipal UserDetails userDetails) {
         Optional<User> userOpt = userService.getUserByEmail(userDetails.getUsername());
         if (userOpt.isEmpty()) return ResponseEntity.status(404).body("User not found");
 
         String result = proposalService.submitProposal(
-            userOpt.get(),
-            payload.getVehicleId(),
-            payload.getPolicyId(),
-            payload.getAddonIds()
-        );
+            userOpt.get(), payload.getVehicleId(), payload.getPolicyId(), payload.getAddonIds());
         return ResponseEntity.ok(result);
     }
 
@@ -47,9 +41,17 @@ public class ProposalController {
         return ResponseEntity.ok(proposalService.getProposalsByUser(userOpt.get()));
     }
 
-    @GetMapping("/{proposalId}")
+    // ✅ FIXED: moved above and removed duplicate 'proposal'
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('OFFICER')")
+    public List<Proposal> getAllProposals() {
+        return proposalService.getAllProposals();
+    }
+
+    // ✅ Optional: enforce numeric ID
+    @GetMapping("/{proposalId:\\d+}")
     public ResponseEntity<?> getProposalById(@PathVariable int proposalId,
-                                            @AuthenticationPrincipal UserDetails userDetails) {
+                                             @AuthenticationPrincipal UserDetails userDetails) {
         Optional<User> userOpt = userService.getUserByEmail(userDetails.getUsername());
         if (userOpt.isEmpty()) return ResponseEntity.status(404).body("User not found");
 
@@ -59,7 +61,6 @@ public class ProposalController {
         Proposal proposal = proposalOpt.get();
         User currentUser = userOpt.get();
 
-        // Allow only the owner or an officer to view
         boolean isOwner = proposal.getUser().getUserId() == currentUser.getUserId();
         boolean isOfficer = currentUser.getRole() == Role.OFFICER;
 
@@ -69,8 +70,6 @@ public class ProposalController {
         return ResponseEntity.ok(proposal);
     }
 
-
-    
     @GetMapping("/all-submitted")
     public ResponseEntity<List<Proposal>> getAllSubmittedProposals(@AuthenticationPrincipal UserDetails userDetails) {
         Optional<User> userOpt = userService.getUserByEmail(userDetails.getUsername());
@@ -100,4 +99,14 @@ public class ProposalController {
         return ResponseEntity.ok(proposalService.rejectProposal(proposalId, officerOpt.get()));
     }
 
+    @PutMapping("/request-docs/{proposalId}")
+    public ResponseEntity<String> requestMoreDocuments(@PathVariable int proposalId,
+                                                       @AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> officerOpt = userService.getUserByEmail(userDetails.getUsername());
+        if (officerOpt.isEmpty() || officerOpt.get().getRole() != Role.OFFICER)
+            return ResponseEntity.status(403).body("Access denied");
+
+        return ResponseEntity.ok(proposalService.markAwaitingDocuments(proposalId, officerOpt.get()));
+    }
 }
+

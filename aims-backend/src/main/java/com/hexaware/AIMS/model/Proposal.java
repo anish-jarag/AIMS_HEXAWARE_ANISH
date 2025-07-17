@@ -30,6 +30,7 @@ public class Proposal {
     private List<ProposalAddon> selectedAddons = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 30, nullable = false)
     private ProposalStatus status;
 
     private LocalDate submissionDate;

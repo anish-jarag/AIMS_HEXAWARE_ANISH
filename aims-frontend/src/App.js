@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -29,10 +30,12 @@ import MyPayments from "./pages/user/MyPayments";
 import SubmitClaim from "./pages/user/SubmitClaim";
 import MyClaims from "./pages/user/MyClaims";
 import UserProfile from "./pages/user/UserProfile";
+import UploadAdditionalDocs from "./pages/user/UploadAdditionalDocs";
 
 const App = () => {
   return (
     <BrowserRouter>
+      <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -73,6 +76,10 @@ const App = () => {
         <Route path="/user/submit-claim" element={<SubmitClaim />} />
         <Route path="/user/my-claims" element={<MyClaims />} />
         <Route path="/user/profile" element={<UserProfile />} />
+        <Route
+          path="/user/proposals/upload/:proposalId"
+          element={<UploadAdditionalDocs />}
+        />
       </Routes>
     </BrowserRouter>
   );

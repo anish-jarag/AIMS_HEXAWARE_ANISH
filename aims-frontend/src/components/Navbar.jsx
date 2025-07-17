@@ -1,17 +1,18 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const token = localStorage.getItem("jwtToken");
+  const navigate = useNavigate();
 
   const logout = () => {
     localStorage.clear();
-    window.location.href = "/login";
+    navigate("/login");
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary px-4">
-      <Link className="navbar-brand" to="/">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-primary px-4 shadow-sm">
+      <Link className="navbar-brand fw-bold" to="/">
         HexaShield
       </Link>
 
@@ -25,9 +26,9 @@ const Navbar = () => {
       </button>
 
       <div className="collapse navbar-collapse" id="navbarNav">
-        <ul className="navbar-nav ms-auto">
+        <ul className="navbar-nav ms-auto align-items-lg-center">
           <li className="nav-item">
-            <Link className="nav-link" to="/">
+            <Link className="nav-link fw-semibold" to="/">
               Home
             </Link>
           </li>
@@ -35,22 +36,33 @@ const Navbar = () => {
           {!token ? (
             <>
               <li className="nav-item">
-                <Link className="nav-link" to="/login">
+                <Link className="nav-link fw-semibold" to="/login">
                   Login
                 </Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/register">
+                <Link className="nav-link fw-semibold" to="/register">
                   Register
                 </Link>
               </li>
             </>
           ) : (
-            <li className="nav-item">
-              <button className="btn btn-light btn-sm" onClick={logout}>
-                Logout
-              </button>
-            </li>
+            <>
+              <li className="nav-item d-none d-lg-block">
+                <button className="btn btn-light btn-sm ms-3" onClick={logout}>
+                  Logout
+                </button>
+              </li>
+              <li className="nav-item d-lg-none">
+                <span
+                  className="nav-link text-white"
+                  role="button"
+                  onClick={logout}
+                >
+                  Logout
+                </span>
+              </li>
+            </>
           )}
         </ul>
       </div>

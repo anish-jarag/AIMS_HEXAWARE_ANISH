@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import OfficerSidebar from "../../components/OfficerSidebar";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const initialFormState = {
   policyName: "",
@@ -14,63 +16,63 @@ const ManagePolicies = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
-  // const [vehicleTypes, setVehicleTypes] = useState([]);
 
-  // Fetch policies
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  const token = localStorage.getItem("jwtToken");
+
   const loadPolicies = async () => {
-    const res = await fetch("http://localhost:8080/api/policy/all", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-      },
-    });
+    try {
+      const res = await fetch(`${BASE_URL}/policy/all`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (!res.ok) {
-      console.error("Failed to fetch policies");
+      if (!res.ok) throw new Error("Failed to fetch policies");
+
+      const data = await res.json();
+      setPolicies(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not load policies.");
       setPolicies([]);
-      return;
     }
-
-    const data = await res.json();
-    setPolicies(Array.isArray(data) ? data : []);
   };
 
   useEffect(() => {
     loadPolicies();
-    // fetchVehicleTypes();
   }, []);
 
-  // Add or update policy
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const method = isEditing ? "PUT" : "POST";
     const url = isEditing
-      ? `http://localhost:8080/api/policy/update/${editId}`
-      : "http://localhost:8080/api/policy/add";
+      ? `${BASE_URL}/policy/update/${editId}`
+      : `${BASE_URL}/policy/add`;
 
-    const res = await fetch(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-      },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
 
-    if (res.ok) {
-      await loadPolicies();
+      if (!res.ok) throw new Error(await res.text());
+
+      toast.success(isEditing ? "Policy updated." : "Policy added.");
       setFormData(initialFormState);
       setIsEditing(false);
       setEditId(null);
-    } else {
-      const msg = await res.text();
-      alert(msg || "Operation failed.");
+      await loadPolicies();
+    } catch (err) {
+      toast.error(err.message || "Failed to save policy.");
     }
   };
 
-  // Edit a policy
   const handleEdit = (policy) => {
     setFormData({
       policyName: policy.policyName,
@@ -83,42 +85,46 @@ const ManagePolicies = () => {
     setIsEditing(true);
   };
 
-  // Delete a policy
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this policy?")) return;
+    if (!window.confirm("Are you sure you want to delete this policy?")) return;
 
-    const res = await fetch(`http://localhost:8080/api/policy/delete/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-      },
-    });
+    try {
+      const res = await fetch(`${BASE_URL}/policy/delete/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (res.ok) {
+      if (!res.ok) throw new Error(await res.text());
+
+      toast.success("Policy deleted.");
       await loadPolicies();
-    } else {
-      const msg = await res.text();
-      alert(msg || "Failed to delete.");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete policy.");
     }
   };
 
   return (
-    <div className="d-flex">
-      <OfficerSidebar />
+    <div className="d-flex min-vh-100">
+      <ToastContainer position="top-right" autoClose={3000} />
 
-      <div className="flex-grow-1 p-4">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h2>Manage Policies</h2>
-        </div>
+      {/* Sidebar */}
+      <div style={{ width: "250px", minWidth: "250px" }}>
+        <OfficerSidebar />
+      </div>
+
+      {/* Content */}
+      <div className="flex-grow-1 p-4 bg-light">
+        <h2 className="mb-4">Manage Policies</h2>
 
         {/* Form */}
-        <form className="card p-4 mb-4 shadow-sm" onSubmit={handleSubmit}>
+        <form className="card p-4 mb-4 shadow" onSubmit={handleSubmit}>
           <div className="row mb-3">
-            <div className="col-md-6">
+            <div className="col-md-6 mb-3">
               <input
                 className="form-control"
-                name="policyName"
                 placeholder="Policy Name"
                 value={formData.policyName}
                 onChange={(e) =>
@@ -127,12 +133,11 @@ const ManagePolicies = () => {
                 required
               />
             </div>
-            <div className="col-md-6">
+            <div className="col-md-6 mb-3">
               <input
                 className="form-control"
-                name="basePremium"
-                placeholder="Base Premium"
                 type="number"
+                placeholder="Base Premium"
                 value={formData.basePremium}
                 onChange={(e) =>
                   setFormData({ ...formData, basePremium: e.target.value })
@@ -145,8 +150,8 @@ const ManagePolicies = () => {
           <div className="mb-3">
             <textarea
               className="form-control"
-              name="description"
               placeholder="Description"
+              rows={3}
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
@@ -156,22 +161,23 @@ const ManagePolicies = () => {
           </div>
 
           <div className="row mb-3">
-            <div className="col-md-6">
+            <div className="col-md-6 mb-3">
               <select
                 className="form-select"
                 value={formData.vehicleType}
                 onChange={(e) =>
                   setFormData({ ...formData, vehicleType: e.target.value })
                 }
+                required
               >
-                <option value={-1}>Choose Vehicle</option>
+                <option value="">Choose Vehicle Type</option>
                 <option value="CAR">Car</option>
                 <option value="BIKE">Bike</option>
                 <option value="TRUCK">Truck</option>
                 <option value="CAMPER_VAN">Camper Van</option>
               </select>
             </div>
-            <div className="col-md-6">
+            <div className="col-md-6 d-flex align-items-center mb-3">
               <div className="form-check form-switch">
                 <input
                   className="form-check-input"
@@ -181,7 +187,7 @@ const ManagePolicies = () => {
                     setFormData({ ...formData, active: e.target.checked })
                   }
                 />
-                <label className="form-check-label">Active</label>
+                <label className="form-check-label ms-2">Active</label>
               </div>
             </div>
           </div>
@@ -191,14 +197,14 @@ const ManagePolicies = () => {
           </button>
         </form>
 
-        {/* Policies List */}
+        {/* Cards */}
         <div className="row">
           {policies.map((p) => (
-            <div className="col-md-4 mb-3" key={p.policyId}>
+            <div className="col-md-6 col-lg-4 mb-4" key={p.policyId}>
               <div className="card h-100 shadow-sm">
                 <div className="card-body">
-                  <h5>{p.policyName}</h5>
-                  <p>{p.description}</p>
+                  <h5 className="fw-bold text-primary">{p.policyName}</h5>
+                  <p className="text-muted">{p.description}</p>
                   <p>
                     <strong>Premium:</strong> ₹{p.basePremium}
                   </p>
@@ -206,9 +212,7 @@ const ManagePolicies = () => {
                     <strong>Type:</strong> {p.vehicleType}
                   </p>
                   <span
-                    className={`badge ${
-                      p.active ? "bg-success" : "bg-secondary"
-                    }`}
+                    className={`badge ${p.active ? "bg-success" : "bg-danger"}`}
                   >
                     {p.active ? "Active" : "Inactive"}
                   </span>

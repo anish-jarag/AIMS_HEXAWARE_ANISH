@@ -4,6 +4,8 @@ import com.hexaware.AIMS.model.*;
 import com.hexaware.AIMS.model.enums.ProposalStatus;
 import com.hexaware.AIMS.repository.*;
 
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -72,7 +74,9 @@ public class ProposalService {
         return "Proposal submitted successfully.";
     }
 
-
+    public List<Proposal> getAllProposals() {
+        return proposalRepository.findAll();
+    }
 
     public List<Proposal> getProposalsByUser(User user) {
         return proposalRepository.findByUser(user);
@@ -83,8 +87,12 @@ public class ProposalService {
     }
 
     public List<Proposal> getAllSubmittedProposals() {
-        return proposalRepository.findByStatus(ProposalStatus.SUBMITTED);
+        return proposalRepository.findByStatusIn(List.of(
+            ProposalStatus.SUBMITTED,
+            ProposalStatus.AWAITING_DOCUMENTS
+        ));
     }
+
 
     public String approveProposal(int proposalId, User officer) {
         Optional<Proposal> optional = proposalRepository.findById(proposalId);
@@ -114,5 +122,25 @@ public class ProposalService {
 
         return "Proposal rejected successfully.";
     }
+
+    @Transactional
+    public String markAwaitingDocuments(int proposalId, User officer) {
+        Optional<Proposal> optional = proposalRepository.findById(proposalId);
+        if (optional.isEmpty()) return "Proposal not found";
+
+        Proposal proposal = optional.get();
+        proposal.setStatus(ProposalStatus.AWAITING_DOCUMENTS);
+        proposal.setApprovedBy(officer);
+        proposalRepository.save(proposal);
+
+        emailService.sendSimpleEmail(
+            proposal.getUser().getEmail(),
+            "Additional Documents Requested",
+            "Your proposal requires additional documents for processing. Please log in to your account and upload them."
+        );
+
+        return "Marked as awaiting documents and email sent.";
+    }
+
 
 }

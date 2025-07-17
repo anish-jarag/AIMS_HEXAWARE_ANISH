@@ -4,8 +4,10 @@ const Stats = () => {
   const [totals, setTotals] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
   useEffect(() => {
-    fetch("http://localhost:8080/api/public/stats")
+    fetch(`${BASE_URL}/public/stats`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch stats");
         return res.json();
@@ -19,45 +21,49 @@ const Stats = () => {
         setTotals({ policies: "---", claims: "---", satisfaction: "---" });
         setLoading(false);
       });
-  }, []);
+  }, [BASE_URL]);
 
   return (
     <section className="bg-primary text-white py-5">
       <div className="container text-center">
-        <h3 className="mb-4">Our Impact</h3>
+        <h3 className="mb-4 fw-bold">Our Impact</h3>
 
         {loading ? (
-          <div className="spinner-border text-light" role="status">
-            <span className="visually-hidden">Loading...</span>
+          <div className="d-flex justify-content-center py-4">
+            <div className="spinner-border text-light" role="status" />
           </div>
         ) : (
           <div className="row mt-4">
-            <div className="col-md-4 mb-4">
-              <div className="p-3">
-                <i className="bi bi-shield-check display-4 mb-2" />
-                <h2>{totals.policies}</h2>
-                <p className="mb-0">Policies Issued</p>
-              </div>
-            </div>
-            <div className="col-md-4 mb-4">
-              <div className="p-3">
-                <i className="bi bi-file-earmark-text display-4 mb-2" />
-                <h2>{totals.claims}</h2>
-                <p className="mb-0">Claims Processed</p>
-              </div>
-            </div>
-            <div className="col-md-4 mb-4">
-              <div className="p-3">
-                <i className="bi bi-emoji-smile display-4 mb-2" />
-                <h2>{totals.satisfaction}%</h2>
-                <p className="mb-0">Satisfaction Rate</p>
-              </div>
-            </div>
+            <StatCard
+              icon="bi-shield-check"
+              value={totals.policies}
+              label="Policies Issued"
+            />
+            <StatCard
+              icon="bi-file-earmark-text"
+              value={totals.claims}
+              label="Claims Processed"
+            />
+            <StatCard
+              icon="bi-emoji-smile"
+              value={`${totals.satisfaction}%`}
+              label="Satisfaction Rate"
+            />
           </div>
         )}
       </div>
     </section>
   );
 };
+
+const StatCard = ({ icon, value, label }) => (
+  <div className="col-md-4 mb-4">
+    <div className="p-3">
+      <i className={`bi ${icon} display-4 mb-2`} aria-hidden="true" />
+      <h2 className="fw-bold">{value}</h2>
+      <p className="mb-0">{label}</p>
+    </div>
+  </div>
+);
 
 export default Stats;
