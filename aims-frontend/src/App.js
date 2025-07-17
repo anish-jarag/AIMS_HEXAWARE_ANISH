@@ -17,6 +17,7 @@ import ViewProposalDocuments from "./pages/officer/ViewProposalDocuments";
 import ReviewClaims from "./pages/officer/ReviewClaims";
 import ClaimSettlements from "./pages/officer/ClaimSettlements";
 import ClaimDetails from "./pages/officer/ClaimDetails";
+import ViewUserProposalDocument from "./pages/user/ViewUserProposalDocuments";
 
 import UserDashboard from "./pages/user/UserDashboard";
 import ApplyProposalPage from "./pages/user/ApplyProposal";
@@ -57,7 +58,11 @@ const App = () => {
           element={<ClaimSettlements />}
         />
         <Route path="/admin/claims/:claimId" element={<ClaimDetails />} />
-        "
+        <Route
+          path="/user/proposals/documents/:proposalId"
+          element={<ViewUserProposalDocument />}
+        />
+
         <Route path="/user/dashboard" element={<UserDashboard />} />
         <Route path="/user/proposal/new" element={<ApplyProposalPage />} />
         <Route path="/user/proposals" element={<MyProposals />} />

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import UserNavbar from "../../components/UserNavbar";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const initialFormState = {
   registrationNumber: "",
@@ -17,9 +19,10 @@ const MyVehicles = () => {
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("jwtToken");
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-  const axiosInstance = axios.create({
-    baseURL: "http://localhost:8080/api",
+  const axiosAuth = axios.create({
+    baseURL: BASE_URL,
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -28,10 +31,10 @@ const MyVehicles = () => {
 
   const loadVehicles = async () => {
     try {
-      const res = await axiosInstance.get("/vehicle/my");
+      const res = await axiosAuth.get("/vehicle/my");
       setVehicles(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error("Failed to fetch vehicles:", err);
+      console.error("Error loading vehicles:", err);
     } finally {
       setLoading(false);
     }
@@ -39,10 +42,10 @@ const MyVehicles = () => {
 
   const loadVehicleTypes = async () => {
     try {
-      const res = await axiosInstance.get("/vehicle/vehicle-types");
-      setVehicleTypes(res.data);
+      const res = await axiosAuth.get("/vehicle/vehicle-types");
+      setVehicleTypes(res.data || []);
     } catch (err) {
-      console.error("Failed to load vehicle types:", err.message);
+      console.error("Error loading vehicle types:", err);
     }
   };
 
@@ -61,13 +64,12 @@ const MyVehicles = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axiosInstance.post("/vehicle/add", formData);
-      alert("Vehicle added successfully!");
+      await axiosAuth.post("/vehicle/add", formData);
+      toast.success("Vehicle added successfully!");
       setFormData(initialFormState);
       loadVehicles();
     } catch (err) {
-      const msg = err.response?.data || "Failed to add vehicle.";
-      alert(msg);
+      toast.error(err.response?.data || "Failed to add vehicle.");
     }
   };
 
@@ -75,20 +77,25 @@ const MyVehicles = () => {
     if (!window.confirm("Are you sure you want to delete this vehicle?"))
       return;
     try {
-      await axiosInstance.delete(`/vehicle/delete/${id}`);
+      await axiosAuth.delete(`/vehicle/delete/${id}`);
+      toast.success("Vehicle deleted.");
       loadVehicles();
     } catch (err) {
-      alert("Failed to delete vehicle.");
+      toast.error(
+        err.response?.data ||
+          "Cannot delete vehicle. It may be linked to a policy or proposal."
+      );
     }
   };
 
   return (
     <>
       <UserNavbar />
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="container py-5">
         <h2 className="fw-bold mb-4">Manage My Vehicles</h2>
 
-        {/* Form Section */}
+        {/* Add Vehicle Form */}
         <form className="card p-4 shadow-sm mb-5" onSubmit={handleSubmit}>
           <h5 className="mb-3">Add New Vehicle</h5>
           <div className="row g-3">
@@ -167,31 +174,32 @@ const MyVehicles = () => {
           <div className="row g-4">
             {vehicles.map((v) => (
               <div className="col-md-6 col-lg-4" key={v.vehicleId}>
-                <div className="card h-100 shadow-sm border-0">
+                <div className="card h-100 border-2 shadow-md vehicle-card">
                   <div className="card-body">
-                    <h5 className="fw-bold">{v.registrationNumber}</h5>
+                    <h5 className="fw-bold text-primary">
+                      {v.registrationNumber}
+                    </h5>
                     <hr />
-                    <p className="mb-1">
+                    <p>
                       <strong>Type:</strong> {v.vehicleType}
                     </p>
-                    <p className="mb-1">
+                    <p>
                       <strong>Make:</strong> {v.make}
                     </p>
-                    <p className="mb-1">
+                    <p>
                       <strong>Model:</strong> {v.model}
                     </p>
-                    <p className="mb-0">
+                    <p>
                       <strong>Year:</strong> {v.yearOfManufacture}
                     </p>
                   </div>
-                  <div className="card-footer bg-white border-0 text-end">
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDelete(v.vehicleId)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => handleDelete(v.vehicleId)}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}

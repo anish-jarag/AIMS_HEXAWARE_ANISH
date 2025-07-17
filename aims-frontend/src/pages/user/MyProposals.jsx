@@ -2,30 +2,32 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import UserNavbar from "../../components/UserNavbar";
 import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const MyProposals = () => {
   const [proposals, setProposals] = useState([]);
   const [quotes, setQuotes] = useState({});
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem("jwtToken");
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("jwtToken");
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
   const axiosInstance = axios.create({
-    baseURL: "http://localhost:8080/api",
+    baseURL: BASE_URL,
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
   });
 
-  // Fetch user proposals
   useEffect(() => {
     const fetchProposals = async () => {
       try {
         const res = await axiosInstance.get("/proposal/my");
         setProposals(res.data);
 
-        // Fetch quotes for QUOTE_GENERATED proposals
         const quoteMap = {};
         await Promise.all(
           res.data.map(async (p) => {
@@ -39,42 +41,22 @@ const MyProposals = () => {
         );
         setQuotes(quoteMap);
       } catch (err) {
-        console.error("Error fetching proposals or quotes:", err);
+        toast.error("Error fetching proposals or quotes.");
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProposals();
-  }, [token]);
-
-  const handlePayment = async (proposalId, amount) => {
-    const transactionRef = prompt("Enter your transaction reference ID:");
-    if (!transactionRef) return;
-
-    try {
-      const res = await axiosInstance.post("/payments/pay", null, {
-        params: {
-          proposalId,
-          amount,
-          mode: "UPI",
-          transactionRef,
-        },
-      });
-
-      alert(res.data);
-      window.location.reload(); // reload proposals
-    } catch (err) {
-      console.error("Payment failed:", err);
-      alert("Payment failed: " + (err.response?.data || err.message));
-    }
-  };
+  }, []);
 
   return (
     <>
       <UserNavbar />
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="container my-5">
-        <h3 className="mb-4 text-center">My Insurance Proposals</h3>
+        <h3 className="mb-4 text-center fw-bold">My Insurance Proposals</h3>
 
         {loading ? (
           <div className="text-center py-4">
@@ -82,27 +64,28 @@ const MyProposals = () => {
           </div>
         ) : proposals.length === 0 ? (
           <div className="alert alert-info text-center">
-            You haven't submitted any proposals yet.
+            You haven’t submitted any proposals yet.
           </div>
         ) : (
-          <div className="row">
+          <div className="row g-4">
             {proposals.map((p) => (
-              <div key={p.proposalId} className="col-md-6 col-lg-4 mb-4">
-                <div className="card h-100 shadow-sm">
+              <div key={p.proposalId} className="col-md-6 col-lg-4">
+                <div className="card h-100 shadow border border-secondary-subtle rounded-3">
                   <div className="card-body">
-                    <h5 className="card-title">Proposal #{p.proposalId}</h5>
-                    <p className="card-text mb-1">
-                      <strong>Vehicle:</strong> {p.vehicle?.registrationNumber}{" "}
-                      ({p.vehicle?.vehicleType})
+                    <h5 className="fw-bold mb-2">Proposal #{p.proposalId}</h5>
+                    <p className="mb-1">
+                      <strong>Vehicle:</strong>{" "}
+                      {p.vehicle?.registrationNumber || "N/A"} (
+                      {p.vehicle?.vehicleType || "N/A"})
                     </p>
-                    <p className="card-text mb-1">
-                      <strong>Policy:</strong> {p.policy?.policyName}
+                    <p className="mb-1">
+                      <strong>Policy:</strong> {p.policy?.policyName || "N/A"}
                     </p>
-                    <p className="card-text mb-1">
+                    <p className="mb-1">
                       <strong>Status:</strong>{" "}
                       <span
                         className={`badge ${
-                          p.status === "ACTIVE"
+                          p.status === "APPROVED"
                             ? "bg-success"
                             : p.status === "REJECTED"
                             ? "bg-danger"
@@ -114,18 +97,19 @@ const MyProposals = () => {
                         {p.status}
                       </span>
                     </p>
-                    <p className="card-text">
-                      <strong>Submitted on:</strong> {p.submissionDate}
+                    <p className="mb-1">
+                      <strong>Submitted:</strong>{" "}
+                      {new Date(p.submissionDate).toLocaleDateString()}
                     </p>
 
                     {p.status === "QUOTE_GENERATED" && quotes[p.proposalId] && (
                       <>
                         <hr />
-                        <p className="card-text">
-                          <strong>Quote Amount:</strong> ₹
+                        <p className="mb-1">
+                          <strong>Quote:</strong> ₹
                           {quotes[p.proposalId].totalPremium}
                         </p>
-                        <p className="card-text">
+                        <p className="mb-3">
                           <strong>Coverage:</strong> ₹
                           {quotes[p.proposalId].totalPremium * 10}
                         </p>
@@ -145,13 +129,15 @@ const MyProposals = () => {
                       </>
                     )}
                   </div>
-                  <div className="card-footer bg-white border-0 text-end">
-                    <a
-                      href={`/user/documents/${p.proposalId}`}
+                  <div className="card-footer bg-white text-end border-0">
+                    <button
                       className="btn btn-sm btn-outline-primary"
+                      onClick={() =>
+                        navigate(`/user/proposals/documents/${p.proposalId}`)
+                      }
                     >
                       View Documents
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>

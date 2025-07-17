@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import UserNavbar from "../../components/UserNavbar";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const MyClaims = () => {
   const [claims, setClaims] = useState([]);
@@ -8,12 +10,13 @@ const MyClaims = () => {
 
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("jwtToken");
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
     if (!userId || !token) return;
 
     axios
-      .get(`http://localhost:8080/api/claims/user/${userId}`, {
+      .get(`${BASE_URL}/claims/user/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -21,7 +24,7 @@ const MyClaims = () => {
       .then((res) => setClaims(res.data))
       .catch((err) => {
         console.error("Error loading claims:", err);
-        alert("Failed to load claims.");
+        toast.error("Failed to load claims.");
       })
       .finally(() => setLoading(false));
   }, [userId]);
@@ -29,8 +32,9 @@ const MyClaims = () => {
   return (
     <>
       <UserNavbar />
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="container my-5">
-        <h3 className="text-center mb-4">My Claims</h3>
+        <h3 className="text-center fw-bold mb-4">My Insurance Claims</h3>
 
         {loading ? (
           <div className="text-center py-5">
@@ -38,10 +42,10 @@ const MyClaims = () => {
           </div>
         ) : claims.length === 0 ? (
           <div className="alert alert-info text-center">
-            You have not submitted any claims yet.
+            You haven’t submitted any claims yet.
           </div>
         ) : (
-          <div className="table-responsive shadow-sm">
+          <div className="table-responsive shadow rounded">
             <table className="table table-hover table-striped align-middle">
               <thead className="table-light text-center">
                 <tr>
@@ -50,9 +54,9 @@ const MyClaims = () => {
                   <th>Policy</th>
                   <th>Reason</th>
                   <th>Status</th>
-                  <th>Submitted</th>
-                  <th>Decision</th>
-                  <th>Remarks</th>
+                  <th>Submitted On</th>
+                  <th>Decision Date</th>
+                  <th>Officer Remarks</th>
                 </tr>
               </thead>
               <tbody className="text-center">
@@ -64,10 +68,10 @@ const MyClaims = () => {
                         "—"}
                     </td>
                     <td>{c.issuedPolicy?.policy?.policyName || "—"}</td>
-                    <td>{c.claimReason}</td>
+                    <td>{c.claimReason || "—"}</td>
                     <td>
                       <span
-                        className={`badge ${
+                        className={`badge px-3 py-2 ${
                           c.status === "APPROVED"
                             ? "bg-success"
                             : c.status === "REJECTED"
@@ -80,8 +84,16 @@ const MyClaims = () => {
                         {c.status}
                       </span>
                     </td>
-                    <td>{c.submittedDate || "—"}</td>
-                    <td>{c.decisionDate || "—"}</td>
+                    <td>
+                      {c.submittedDate
+                        ? new Date(c.submittedDate).toLocaleDateString()
+                        : "—"}
+                    </td>
+                    <td>
+                      {c.decisionDate
+                        ? new Date(c.decisionDate).toLocaleDateString()
+                        : "—"}
+                    </td>
                     <td>{c.officerRemarks || "—"}</td>
                   </tr>
                 ))}

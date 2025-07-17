@@ -38,7 +38,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role; // USER or OFFICER
+    private Role role; 
 
     // Constructors
     public User() {}
