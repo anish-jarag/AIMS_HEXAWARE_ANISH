@@ -12,8 +12,8 @@ const OfficerSidebar = () => {
     { path: "/admin/proposals", label: "Proposal Review" },
     { path: "/admin/payments", label: "Payment Overview" },
     { path: "/officer/issued-policies", label: "Issued Policies" },
-    { path: "/admin/claims", label: "Claim Review" },
-    { path: "/admin/claim-payments", label: "Claim Settlements" },
+    { path: "/admin/claims/review", label: "Claim Review" },
+    { path: "/admin/claims/settlements", label: "Claim Settlements" },
     { path: "/officer/registered-users", label: "Registered Users" },
   ];
 

@@ -21,9 +21,8 @@ public class ClaimController {
     public String submitClaim(
             @RequestParam int issuedPolicyId,
             @RequestParam int userId,
-            @RequestParam String reason,
-            @RequestParam double amount) {
-        return claimService.submitClaim(issuedPolicyId, userId, reason, amount);
+            @RequestParam String reason) {
+        return claimService.submitClaim(issuedPolicyId, userId, reason);
     }
 
     @PutMapping("/decide")

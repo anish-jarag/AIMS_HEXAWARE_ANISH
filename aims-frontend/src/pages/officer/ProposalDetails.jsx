@@ -125,14 +125,14 @@ const ProposalDetails = () => {
         >
           View Submitted Documents
         </button>
-        <button
+        {/* <button
           className="btn btn-warning"
           onClick={() =>
             alert("Feature under construction: Request Additional Documents")
           }
         >
           Request More Documents
-        </button>
+        </button> */}
         <button
           className="btn btn-outline-primary"
           disabled={!proposal}

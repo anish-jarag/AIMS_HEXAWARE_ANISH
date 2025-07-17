@@ -46,7 +46,7 @@ public class IssuedPolicy {
         this.endDate = endDate;
         this.policyDocumentPath = policyDocumentPath;
     }
-
+    
     // Getters and Setters
     public int getIssuedPolicyId() { return issuedPolicyId; }
     public void setIssuedPolicyId(int issuedPolicyId) { this.issuedPolicyId = issuedPolicyId; }

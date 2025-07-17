@@ -26,7 +26,7 @@ public class ClaimService {
     private UserRepository userRepo;
 
     // File a new claim
-    public String submitClaim(int issuedPolicyId, int userId, String reason, double amountRequested) {
+    public String submitClaim(int issuedPolicyId, int userId, String reason) {
         Optional<IssuedPolicy> policyOpt = issuedPolicyRepo.findById(issuedPolicyId);
         Optional<User> userOpt = userRepo.findById(userId);
 
@@ -34,15 +34,11 @@ public class ClaimService {
         if (userOpt.isEmpty()) return "User not found";
 
         IssuedPolicy policy = policyOpt.get();
-        if (amountRequested > policy.getCoverageAmount()) {
-            return "Requested amount ₹" + amountRequested + " exceeds coverage limit ₹" + policy.getCoverageAmount();
-        }
-
+       
         Claim claim = new Claim();
         claim.setIssuedPolicy(policy);
         claim.setSubmittedBy(userOpt.get());
         claim.setClaimReason(reason);
-        claim.setClaimAmountRequested(amountRequested);
         claim.setStatus(ClaimStatus.PENDING);
         claim.setSubmittedDate(LocalDate.now());
 

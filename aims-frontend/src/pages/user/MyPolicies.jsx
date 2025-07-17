@@ -8,23 +8,20 @@ const MyPolicies = () => {
   const token = localStorage.getItem("jwtToken");
   const userId = localStorage.getItem("userId");
 
-  const axiosInstance = axios.create({
-    baseURL: "http://localhost:8080/api",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !token) return;
 
-    axiosInstance
-      .get(`/issued/user/${userId}`)
+    axios
+      .get(`http://localhost:8080/api/issued/user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
       .then((res) => setPolicies(res.data))
       .catch((err) => console.error("Error loading policies:", err))
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, token]);
 
   return (
     <>

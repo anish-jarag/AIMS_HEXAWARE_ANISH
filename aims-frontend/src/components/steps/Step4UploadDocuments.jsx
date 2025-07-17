@@ -5,7 +5,6 @@ const documentTypes = [
   "PAN",
   "RC_BOOK",
   "INSPECTION_REPORT",
-  "ACCIDENT_IMAGE",
   "OTHER",
 ];
 

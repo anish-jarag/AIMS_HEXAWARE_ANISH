@@ -2,10 +2,12 @@ package com.hexaware.AIMS.service;
 
 import com.hexaware.AIMS.model.IssuedPolicy;
 import com.hexaware.AIMS.model.Proposal;
+import com.hexaware.AIMS.model.Quote;
 import com.hexaware.AIMS.model.User;
 import com.hexaware.AIMS.model.enums.ProposalStatus;
 import com.hexaware.AIMS.repository.IssuedPolicyRepository;
 import com.hexaware.AIMS.repository.ProposalRepository;
+import com.hexaware.AIMS.repository.QuoteRepository;
 import com.hexaware.AIMS.repository.UserRepository;
 
 import com.itextpdf.text.*;
@@ -31,6 +33,9 @@ public class IssuedPolicyService {
     @Autowired
     private UserRepository userRepo;
 
+    @Autowired
+    private QuoteRepository quoteRepo;
+
     // Issue a policy based on approved proposal
     public String issuePolicy(int proposalId) {
         Optional<Proposal> proposalOpt = proposalRepo.findById(proposalId);
@@ -41,6 +46,13 @@ public class IssuedPolicyService {
             return "Only approved proposals can be issued";
         }
 
+        // Get the quote for this proposal
+        Optional<Quote> quoteOpt = quoteRepo.findByProposal(proposal);
+        if (quoteOpt.isEmpty()) return "Quote not found for this proposal";
+
+        Quote quote = quoteOpt.get();
+        double coverageAmount = quote.getTotalPremium() * 10;
+
         IssuedPolicy issued = new IssuedPolicy();
         issued.setProposal(proposal);
         issued.setUser(proposal.getUser());
@@ -48,12 +60,13 @@ public class IssuedPolicyService {
         issued.setStartDate(LocalDate.now());
         issued.setEndDate(LocalDate.now().plusYears(1));
         issued.setPolicyDocumentPath("default.pdf"); // Placeholder
-        double basePremium = proposal.getPolicy().getBasePremium();
-        double coverageAmount = basePremium * 10;
         issued.setCoverageAmount(coverageAmount);
+
         issuedPolicyRepo.save(issued);
         return "Policy issued successfully";
     }
+
+
 
     // Get issued policy by ID
     public IssuedPolicy getIssuedPolicyById(int issuedPolicyId) {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import UserNavbar from "../../components/UserNavbar";
 
 const MyPayments = () => {
@@ -9,90 +10,57 @@ const MyPayments = () => {
   const userId = localStorage.getItem("userId");
 
   useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:8080/api/payments/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+    if (!userId || !token) return;
 
-        if (!res.ok) throw new Error("Failed to fetch payments");
+    axios
+      .get(`http://localhost:8080/api/payments/user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => setPayments(res.data))
+      .catch((err) => console.error("Error fetching payments:", err))
+      .finally(() => setLoading(false));
+  }, [userId, token]);
 
-        const data = await res.json();
-        setPayments(data);
-      } catch (error) {
-        console.error("Error loading payments:", error);
-        alert("Failed to load payments.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userId) fetchPayments();
-  }, [userId]);
-
-  const formatDate = (isoString) => {
-    const date = new Date(isoString);
-    return date.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  if (loading)
+    return <p className="text-center mt-5">Loading payment history...</p>;
 
   return (
     <>
       <UserNavbar />
-      <div className="container my-5">
-        <h3 className="text-center mb-4 fw-semibold">My Payment History</h3>
+      <div className="container mt-5">
+        <h2 className="mb-4">My Payments</h2>
 
-        {loading ? (
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary" role="status" />
-          </div>
-        ) : payments.length === 0 ? (
-          <div className="alert alert-info text-center">
-            No payments found yet.
-          </div>
+        {payments.length === 0 ? (
+          <div className="alert alert-info">No payment records found.</div>
         ) : (
-          <div className="table-responsive shadow-sm rounded">
-            <table className="table table-bordered table-hover text-center align-middle">
-              <thead className="table-light">
+          <div className="table-responsive">
+            <table className="table table-striped table-bordered">
+              <thead className="table-primary">
                 <tr>
                   <th>#</th>
-                  <th>Amount Paid</th>
-                  <th>Status</th>
+                  <th>Policy Number</th>
+                  <th>Amount Paid (₹)</th>
                   <th>Payment Date</th>
-                  <th>Policy ID</th>
-                  <th>Reference</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {payments.map((payment, index) => (
-                  <tr key={payment.paymentId}>
+                {payments.map((p, index) => (
+                  <tr key={p.paymentId}>
                     <td>{index + 1}</td>
-                    <td>₹{payment.amountPaid}</td>
+                    <td>{p.policyNumber || "-"}</td>
+                    <td>₹{p.amountPaid.toFixed(2)}</td>
+                    <td>{new Date(p.paymentDate).toLocaleDateString()}</td>
                     <td>
                       <span
-                        className={`badge px-3 py-2 ${
-                          payment.status === "SUCCESS"
-                            ? "bg-success"
-                            : payment.status === "PENDING"
-                            ? "bg-warning text-dark"
-                            : "bg-danger"
+                        className={`badge ${
+                          p.status === "SUCCESS" ? "bg-success" : "bg-danger"
                         }`}
                       >
-                        {payment.status}
+                        {p.status}
                       </span>
-                    </td>
-                    <td>{formatDate(payment.paymentDate)}</td>
-                    <td>{payment.proposal?.proposalId || "—"}</td>
-                    <td className="text-truncate" style={{ maxWidth: "180px" }}>
-                      {payment.transactionReference}
                     </td>
                   </tr>
                 ))}

@@ -59,7 +59,12 @@ const UserNavbar = () => {
             </Link>
           </li>
           <li className="nav-item">
-            <Link to="/user/claims" className="nav-link">
+            <Link to="/user/submit-claim" className="nav-link">
+              New Claim
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/user/my-claims" className="nav-link">
               My Claims
             </Link>
           </li>

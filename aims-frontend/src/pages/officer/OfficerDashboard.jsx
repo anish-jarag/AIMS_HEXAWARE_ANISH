@@ -1,29 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import OfficerSidebar from "../../components/OfficerSidebar";
 
 const OfficerDashboard = () => {
   const officerName = localStorage.getItem("name") || "Officer";
 
-  const [summary, setSummary] = useState({
-    totalProposals: 0,
-    pendingProposals: 0,
-    approvedProposals: 0,
-    totalClaims: 0,
-    approvedClaims: 0,
-    rejectedClaims: 0,
-  });
-
-  // Load summary counts from backend
-  useEffect(() => {
-    fetch("http://localhost:8080/api/dashboard/summary", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setSummary(data))
-      .catch((err) => console.error("Failed to fetch summary", err));
-  }, []);
+  const summary = {
+    totalProposals: 12,
+    pendingProposals: 3,
+    approvedProposals: 9,
+    totalClaims: 8,
+    approvedClaims: 5,
+    rejectedClaims: 2,
+  };
 
   const cards = [
     {
@@ -66,21 +54,25 @@ const OfficerDashboard = () => {
 
   return (
     <div className="container-fluid">
-      <div className="row flex-nowrap min-vh-100">
+      <div className="row min-vh-100">
         {/* Sidebar */}
         <div
-          className="col-auto px-0 bg-light"
-          style={{ width: "220px", borderRight: "1px solid #dee2e6" }}
+          className="col-auto bg-light d-flex flex-column p-0"
+          style={{
+            width: "220px",
+            borderRight: "1px solid #dee2e6",
+            minHeight: "100vh",
+          }}
         >
           <OfficerSidebar />
         </div>
 
         {/* Main Content */}
-        <div className="col ps-md-4 pe-4 py-4">
+        <div className="col ps-4 pe-4 py-4" style={{ marginLeft: "220px" }}>
           <h2 className="mt-2">Welcome, {officerName}</h2>
           <p className="text-muted">Here’s a quick overview of activity:</p>
 
-          {/* Summary Cards */}
+          {/* Cards */}
           <div className="row g-3 mt-3">
             {cards.map((c, i) => (
               <div className="col-md-4" key={i}>

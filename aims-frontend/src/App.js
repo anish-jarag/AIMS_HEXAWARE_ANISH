@@ -14,6 +14,9 @@ import IssuedPolicies from "./pages/officer/IssuedPolicies";
 import RegisteredUsers from "./pages/officer/RegisteredUsers";
 import PaymentOverview from "./pages/officer/PaymentOverview";
 import ViewProposalDocuments from "./pages/officer/ViewProposalDocuments";
+import ReviewClaims from "./pages/officer/ReviewClaims";
+import ClaimSettlements from "./pages/officer/ClaimSettlements";
+import ClaimDetails from "./pages/officer/ClaimDetails";
 
 import UserDashboard from "./pages/user/UserDashboard";
 import ApplyProposalPage from "./pages/user/ApplyProposal";
@@ -22,6 +25,9 @@ import MyVehicles from "./pages/user/MyVehicles";
 import PaymentScreen from "./pages/user/PaymentScreen";
 import MyPolicies from "./pages/user/MyPolicies";
 import MyPayments from "./pages/user/MyPayments";
+import SubmitClaim from "./pages/user/SubmitClaim";
+import MyClaims from "./pages/user/MyClaims";
+import UserProfile from "./pages/user/UserProfile";
 
 const App = () => {
   return (
@@ -30,7 +36,6 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
         <Route path="/admin/dashboard" element={<OfficerDashboard />} />
         <Route path="/admin/policies" element={<ManagePolicies />} />
         <Route path="/admin/addons" element={<ManageAddons />} />
@@ -46,7 +51,13 @@ const App = () => {
           path="/officer/proposals/:proposalId/documents"
           element={<ViewProposalDocuments />}
         />
-
+        <Route path="/admin/claims/review" element={<ReviewClaims />} />
+        <Route
+          path="/admin/claims/settlements"
+          element={<ClaimSettlements />}
+        />
+        <Route path="/admin/claims/:claimId" element={<ClaimDetails />} />
+        "
         <Route path="/user/dashboard" element={<UserDashboard />} />
         <Route path="/user/proposal/new" element={<ApplyProposalPage />} />
         <Route path="/user/proposals" element={<MyProposals />} />
@@ -54,6 +65,9 @@ const App = () => {
         <Route path="/user/pay" element={<PaymentScreen />} />
         <Route path="/user/my-policies" element={<MyPolicies />} />
         <Route path="/user/my-payments" element={<MyPayments />} />
+        <Route path="/user/submit-claim" element={<SubmitClaim />} />
+        <Route path="/user/my-claims" element={<MyClaims />} />
+        <Route path="/user/profile" element={<UserProfile />} />
       </Routes>
     </BrowserRouter>
   );
